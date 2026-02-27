@@ -6,6 +6,7 @@ import com.StartUp.entity.StudentProfile;
 import com.StartUp.entity.User;
 import com.StartUp.enums.Role;
 import com.StartUp.enums.UserStatus;
+import com.StartUp.exception.AppExceptions;
 import com.StartUp.repository.EmployerProfileRepository;
 import com.StartUp.repository.StudentProfileRepository;
 import com.StartUp.repository.UserRepository;
@@ -37,6 +38,7 @@ public class AuthService {
     @Transactional
     public AuthDtos.AuthResponse register (AuthDtos.RegisterRequest request){
         if(userRepository.existsByEmail(request.email())){
+            throw new AppExceptions.EmailAlreadyExistsException("Не можеш да се регистрираш като ADMIN.");
 
         }
 
@@ -64,12 +66,10 @@ public class AuthService {
     public AuthDtos.AuthResponse login (AuthDtos.LoginRequest request){
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.email(),request.password()));
 
-        // TODO: CHANGE THE EXCEPTION LATER WITH GLOBAL EXCEPTION
-        User user = userRepository.findByEmail(request.email()).orElseThrow(() -> new RuntimeException("Потребителят не е намерен"));
+        User user = userRepository.findByEmail(request.email()).orElseThrow(() -> new AppExceptions.InvalidTokenException("Потребителят не е намерен"));
 
-        // TODO: CHANGE THE EXCEPTION LATER WITH GLOBAL EXCEPTION
         if(user.getStatus() == UserStatus.BLOCKED){
-            throw new RuntimeException("Потребителят е блокиран");
+            throw new AppExceptions.AccountBlockedException();
         }
 
         return buildTokenResponse(user);
@@ -79,24 +79,20 @@ public class AuthService {
     public AuthDtos.AuthResponse refreshToken(AuthDtos.RefreshTokenRequest request){
         final String  userEmail = jwtService.extractUsername(request.refreshToken());
 
-        // TODO: CHANGE THE EXCEPTION LATER WITH GLOBAL EXCEPTION
         if(userEmail == null){
-            throw new RuntimeException("Невалиден Refresh Token");
+            throw new AppExceptions.InvalidTokenException("Невалиден Refresh Token");
         }
 
-        // TODO: CHANGE THE EXCEPTION LATER WITH GLOBAL EXCEPTION
-        User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("Потребителят не е намерен"));
+        User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Потребителят не е намерен"));
 
         if(!request.refreshToken().equals(user.getRefreshToken())){
-            // TODO: CHANGE THE EXCEPTION LATER WITH GLOBAL EXCEPTION
-            throw new RuntimeException("Refresh Token не съвпада");
+            throw new AppExceptions.InvalidTokenException("Refresh Token не съвпада");
         }
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
 
         if(!jwtService.isTokenValid(request.refreshToken(),userDetails)){
-            // TODO: CHANGE THE EXCEPTION LATER WITH GLOBAL EXCEPTION
-            throw new RuntimeException("Невалиден токен");
+            throw new AppExceptions.InvalidTokenException("Невалиден токен");
         }
 
         return buildTokenResponse(user);
