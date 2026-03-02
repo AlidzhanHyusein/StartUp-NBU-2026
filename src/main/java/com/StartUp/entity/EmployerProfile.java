@@ -29,7 +29,7 @@ public class EmployerProfile {
     @Column(name = "company_name", nullable = false)
     private String companyName;
 
-    @Column(length = 1000)
+    @Column(length = 1200)
     private String description;
 
     private String website;
