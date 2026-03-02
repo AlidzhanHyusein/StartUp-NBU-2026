@@ -1,6 +1,7 @@
 package com.StartUp.controller;
 
 import com.StartUp.dtos.auth.AuthDtos;
+import com.StartUp.enums.Role;
 import com.StartUp.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,10 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<AuthDtos.AuthResponse> register(@Valid @RequestBody AuthDtos.RegisterRequest request){
+        if(request.role() == Role.ADMIN){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request));
     }
 

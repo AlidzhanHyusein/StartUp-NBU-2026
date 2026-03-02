@@ -27,7 +27,7 @@ public class EmployerProfileService {
     private final EmployerProfileRepository employerProfileRepository;
     private final UserRepository userRepository;
 
-    @Value("${app.upload.dir}")
+    @Value("${file.upload-dir}")
     private String uploadDir;
 
     @Transactional(readOnly = true)
