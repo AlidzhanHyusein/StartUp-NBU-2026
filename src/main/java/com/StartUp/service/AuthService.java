@@ -43,7 +43,7 @@ public class AuthService {
         }
 
         if(request.role() == Role.ADMIN){
-
+            throw new AppExceptions.BadRequestException("Не може да се регистрирате като админ");
         }
 
         User user = User.builder()

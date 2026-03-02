@@ -37,20 +37,11 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/register","/api/login", "/api/categories").permitAll()
+                        .requestMatchers("/api/auth/register","/api/auth/login", "/api/auth/categories").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
-                .formLogin(form -> form
-                        .loginProcessingUrl("/login")
-                        .successHandler(((request, response, authentication) -> {
-                            response.setStatus(HttpServletResponse.SC_OK);
-                        }))
-                        .failureHandler(((request, response, exception) -> {
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                        }))
-                        .permitAll()
-                )
+
                 .authenticationProvider(authenticationProvider())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .build();

@@ -24,7 +24,7 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    @Value("${app.upload.dir}")
+    @Value("${file.upload-dir}")
     private String uploadDir;
 
     @Transactional(readOnly = true)
