@@ -31,9 +31,9 @@ public class UserService {
     public UserDtos.UserProfileResponse getProfile(String email){
 
         User user = findByEmail(email);
-
         return mapToResponse(user);
     }
+
 
     @Transactional(readOnly = true)
     public UserDtos.UserProfileResponse getProfileById(Long id){
