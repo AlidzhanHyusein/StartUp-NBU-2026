@@ -61,4 +61,13 @@ public class User {
     public boolean isActive() {
         return this.status == UserStatus.ACTIVE;
     }
+
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
+
+    public void setRating(int rating) {
+        // Rating is calculated from reviews, this is a placeholder
+        // Actual rating is stored in review aggregations
+    }
 }
