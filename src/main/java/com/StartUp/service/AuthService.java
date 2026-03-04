@@ -22,6 +22,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -34,6 +36,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
+    private final EmailService emailService;
 
     @Transactional
     public AuthDtos.AuthResponse register (AuthDtos.RegisterRequest request){
@@ -52,10 +55,16 @@ public class AuthService {
                 .firstName(request.firstName())
                 .lastName(request.lastName())
                 .role(request.role())
+                .enabled(false)
                 .status(UserStatus.PENDING)
                 .build();
 
+        String token = UUID.randomUUID().toString();
+        user.setVerificationToken(token);
+
         user = userRepository.save(user);
+
+        emailService.sendVerificationEmail(user.getEmail(), token);
 
         createEmptyProfile(user);
 

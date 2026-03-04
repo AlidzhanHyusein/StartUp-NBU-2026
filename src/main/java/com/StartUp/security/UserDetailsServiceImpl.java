@@ -3,6 +3,7 @@ package com.StartUp.security;
 import com.StartUp.entity.User;
 import com.StartUp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -21,6 +22,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Потребител не е намерен: " + email));
+
+        if (!user.isEnabled()) {
+            throw new DisabledException("Email not verified yet");
+        }
 
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getEmail())
