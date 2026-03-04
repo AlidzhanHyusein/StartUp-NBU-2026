@@ -39,10 +39,9 @@ public class AuthService {
     private final EmailService emailService;
 
     @Transactional
-    public AuthDtos.AuthResponse register (AuthDtos.RegisterRequest request){
+    public String register (AuthDtos.RegisterRequest request){
         if(userRepository.existsByEmail(request.email())){
-            throw new AppExceptions.EmailAlreadyExistsException("Не можеш да се регистрираш като ADMIN.");
-
+            throw new AppExceptions.EmailAlreadyExistsException("Имейлът вече е регистриран.");
         }
 
         if(request.role() == Role.ADMIN){
@@ -68,7 +67,7 @@ public class AuthService {
 
         createEmptyProfile(user);
 
-        return buildTokenResponse(user);
+        return "Registration successful! Please check your email to verify your account.";
     }
 
     @Transactional
