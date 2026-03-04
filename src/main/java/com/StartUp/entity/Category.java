@@ -6,28 +6,24 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
-
 @Entity
+@Table(name = "categories")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-
-public class JobApplication {
+public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    private User user;
+    @Column(nullable = false,unique = true)
+    private String name;
 
-    @ManyToOne
-    private Job job;
+    private String description;
 
-    private LocalDate appliedAt;
-
-    @Enumerated(EnumType.STRING)
-    private ApplicationStatus status;
+    @Column(name = "is_active")
+    @Builder.Default
+    private Boolean isActive = true;
 }
