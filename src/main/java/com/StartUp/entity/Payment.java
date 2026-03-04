@@ -20,9 +20,8 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "job_application_id", nullable = false)
-    private JobApplication jobApplication;
+    @Column(name = "job_application_id")
+    private Long jobApplicationId;
 
     @ManyToOne
     @JoinColumn(name = "payer_id", nullable = false)

@@ -31,12 +31,12 @@ public class PaymentService {
     }
 
     @Transactional
-    public Payment createPayment(JobApplication jobApplication, User payer, User receiver, BigDecimal amount) {
+    public Payment createPayment(Long jobApplicationId, User payer, User receiver, BigDecimal amount) {
         BigDecimal commission = calculateCommission(amount);
         BigDecimal totalAmount = calculateTotal(amount);
 
         Payment payment = Payment.builder()
-                .jobApplication(jobApplication)
+                .jobApplicationId(jobApplicationId)
                 .payer(payer)
                 .receiver(receiver)
                 .amount(amount)

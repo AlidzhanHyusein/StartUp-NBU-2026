@@ -19,9 +19,8 @@ public class Review {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "job_application_id", nullable = false)
-    private JobApplication jobApplication;
+    @Column(name = "job_application_id")
+    private Long jobApplicationId;
 
     @ManyToOne
     @JoinColumn(name = "reviewer_id", nullable = false)

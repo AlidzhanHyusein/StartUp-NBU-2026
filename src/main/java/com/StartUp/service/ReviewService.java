@@ -17,14 +17,14 @@ public class ReviewService {
     private final NotificationService notificationService;
 
     @Transactional
-    public Review createReview(JobApplication jobApplication, User reviewer, User reviewedUser, 
+    public Review createReview(Long jobApplicationId, User reviewer, User reviewedUser,
                                Integer rating, String comment) {
         if (rating < 1 || rating > 5) {
             throw new IllegalArgumentException("Rating must be between 1 and 5");
         }
 
         Review review = Review.builder()
-                .jobApplication(jobApplication)
+                .jobApplicationId(jobApplicationId)
                 .reviewer(reviewer)
                 .reviewedUser(reviewedUser)
                 .rating(rating)
