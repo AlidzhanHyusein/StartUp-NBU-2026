@@ -41,6 +41,12 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getAllUsers(pageable));
     }
 
+    @PutMapping("/users/{id}")
+    public ResponseEntity<Void> verifyUser(@PathVariable Long id){
+        adminService.verifyUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @Operation(summary = "Filter users by status", description = "Returns a paginated list of users filtered by their status (PENDING, ACTIVE, BLOCKED)")
     @GetMapping("/users/filter")
     public ResponseEntity<Page<User>> getUsersByStatus(@RequestParam UserStatus status,@PageableDefault(size = 20)Pageable pageable){
