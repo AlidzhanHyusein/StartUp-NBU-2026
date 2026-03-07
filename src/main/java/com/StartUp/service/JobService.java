@@ -11,7 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.awt.print.Pageable;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 @Service
@@ -99,6 +99,18 @@ public class JobService {
 
         job.setStatus(JobStatus.CLOSED);
         jobRepository.save(job);
+    }
+
+    public List<JobDtos.JobResponse> filterJobs(JobDtos.JobFilter jobFilter) {
+        return jobRepository.findAll().stream()
+                .filter(job -> jobFilter.jobCategory() == null || job.getCategory() == jobFilter.jobCategory())
+                .filter(job -> jobFilter.jobType() == null || job.getType() == jobFilter.jobType())
+                .filter(job -> jobFilter.jobLocation() == null || job.getLocation() == jobFilter.jobLocation())
+                .filter(job -> jobFilter.duration() == null || job.getDuration() == jobFilter.duration())
+                .filter(job -> jobFilter.minSalary() == null || job.getSalary().compareTo(jobFilter.minSalary()) >= 0)
+                .filter(job -> jobFilter.status() == null || job.getStatus() == JobStatus.OPEN)
+                .map(this::mapToJobResponse)
+                .toList();
     }
 
     private JobDtos.JobResponse mapToJobResponse(Job job) {

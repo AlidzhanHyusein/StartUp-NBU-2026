@@ -5,6 +5,7 @@ import com.StartUp.service.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -12,7 +13,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.awt.print.Pageable;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 @Tag(name = "Job", description = "CRUD operations about job")
@@ -39,7 +40,7 @@ public class JobController {
     @GetMapping
     @PreAuthorize("hasRole('EMPLOYER')")
     public ResponseEntity<Page<JobDtos.JobResponse>> getAllJobs(@AuthenticationPrincipal UserDetails userDetails,
-                                                                Pageable pageable) {
+                                                                @PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(jobService.getAllMyJobs(userDetails.getUsername(), pageable));
 
     }

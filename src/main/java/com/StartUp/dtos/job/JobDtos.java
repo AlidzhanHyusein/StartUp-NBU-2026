@@ -3,6 +3,7 @@ package com.StartUp.dtos.job;
 import com.StartUp.entity.EmployerProfile;
 import com.StartUp.enums.JobCategory;
 import com.StartUp.enums.JobLocation;
+import com.StartUp.enums.JobStatus;
 import com.StartUp.enums.JobType;
 
 import java.math.BigDecimal;
@@ -42,6 +43,16 @@ public class JobDtos {
             String lastName,
             String companyName,
             String email
+    ){
+    }
+
+    public record JobFilter (
+            JobCategory jobCategory,
+            JobType jobType,
+            JobLocation jobLocation,
+            Integer duration,
+            BigDecimal minSalary,
+            JobStatus status
     ){
     }
 }
