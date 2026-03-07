@@ -7,8 +7,11 @@ import com.StartUp.enums.JobStatus;
 import com.StartUp.exception.AppExceptions;
 import com.StartUp.repository.EmployerProfileRepository;
 import com.StartUp.repository.JobRepository;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.awt.print.Pageable;
 import java.util.List;
 
 @Service
@@ -21,6 +24,7 @@ public class JobService {
         this.employerProfileRepository = employerProfileRepository;
     }
 
+    @Transactional
     public JobDtos.JobResponse addMyJob(JobDtos.JobRequest jobRequest, String username) {
         EmployerProfile employer = employerProfileRepository.findByUserEmail(username)
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Employer not found"));
@@ -41,14 +45,16 @@ public class JobService {
         return mapToJobResponse(jobRepository.save(job));
     }
 
-    public List<JobDtos.JobResponse> getAllMyJobs(String username) {
+    @Transactional
+    public Page<JobDtos.JobResponse> getAllMyJobs(String username, Pageable pageable) {
         EmployerProfile employer = employerProfileRepository.findByUserEmail(username)
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Employer not found"));
 
-        List<Job> jobs = jobRepository.findAllByEmployer(employer);
-        return jobs.stream().map(this::mapToJobResponse).toList();
+        Page<Job> jobs = jobRepository.findAllByEmployer(employer, pageable);
+        return jobs.map(this::mapToJobResponse);
     }
 
+    @Transactional
     public JobDtos.JobResponse getMyJob(Long jobId, String username) {
         EmployerProfile employer = employerProfileRepository.findByUserEmail(username)
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Employer not found"));
@@ -60,6 +66,7 @@ public class JobService {
         return mapToJobResponse(job);
     }
 
+    @Transactional
     public JobDtos.JobResponse updateMyJob(Long jobId, JobDtos.JobRequest jobRequest, String username) {
         EmployerProfile employer = employerProfileRepository.findByUserEmail(username)
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Employer not found"));
@@ -81,6 +88,7 @@ public class JobService {
         return mapToJobResponse(jobRepository.save(job));
     }
 
+    @Transactional
     public void deleteMyJob(Long jobId, String username) {
         EmployerProfile employer = employerProfileRepository.findByUserEmail(username)
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Employer not found"));
@@ -94,9 +102,11 @@ public class JobService {
     }
 
     private JobDtos.JobResponse mapToJobResponse(Job job) {
+        EmployerProfile ep = job.getEmployer();
+        JobDtos.EmployerSummary employerSummary = new JobDtos.EmployerSummary(ep.getUser().getFirstName(), ep.getUser().getLastName(), ep.getCompanyName(), ep.getUser().getEmail());
         return new JobDtos.JobResponse(
                 job.getId(),
-                job.getEmployer(),
+                employerSummary,
                 job.getTitle(),
                 job.getCategory(),
                 job.getType(),

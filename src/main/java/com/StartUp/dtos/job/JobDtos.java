@@ -5,17 +5,18 @@ import com.StartUp.enums.JobCategory;
 import com.StartUp.enums.JobLocation;
 import com.StartUp.enums.JobType;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class JobDtos {
     public record JobResponse (
             Long id,
-            EmployerProfile employer,
+            EmployerSummary employer,
             String title,
             JobCategory category,
             JobType type,
             Integer duration,
-            Double salary,
+            BigDecimal salary,
             JobLocation location,
             String description,
             LocalDate startDate,
@@ -28,13 +29,19 @@ public class JobDtos {
             JobCategory category,
             JobType type,
             Integer duration,
-            Double salary,
+            BigDecimal salary,
             JobLocation location,
             String description,
             LocalDate startDate,
             LocalDate endDate
     ){
     }
+
+    public record EmployerSummary (
+            String firstName,
+            String lastName,
+            String companyName,
+            String email
+    ){
+    }
 }
-
-

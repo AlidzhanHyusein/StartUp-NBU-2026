@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -43,7 +44,7 @@ public class Job {
     private Integer duration;
 
     @Column(name = "salary")
-    private Double salary;
+    private BigDecimal salary;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "location")
