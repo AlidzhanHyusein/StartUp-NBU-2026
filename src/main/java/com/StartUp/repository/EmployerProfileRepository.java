@@ -3,6 +3,7 @@ package com.StartUp.repository;
 import com.StartUp.entity.EmployerProfile;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.lang.ScopedValue;
 import java.util.Optional;
 
 public interface EmployerProfileRepository extends JpaRepository<EmployerProfile, Long> {
@@ -12,4 +13,6 @@ public interface EmployerProfileRepository extends JpaRepository<EmployerProfile
     boolean existsByUserId(Long userId);
 
     Optional<EmployerProfile> findByUserEmail(String email);
+
+    Optional<EmployerProfile> findByUser_Email(String email);
 }

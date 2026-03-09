@@ -12,4 +12,5 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
     boolean existsByUserId(Long userId);
 
     StudentProfile existsByUser_Email(String userEmail);
-}
+
+    Optional<StudentProfile> findByUser_Email(String email);}
