@@ -13,6 +13,7 @@ import org.springframework.data.annotation.CreatedDate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -63,7 +64,11 @@ public class Job {
     @Column(name = "status")
     private JobStatus status;
 
-    @CreatedDate
-    @Column(updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDate createdAt;
+
+    @PrePersist
+    public void onCreate() {
+        this.createdAt = LocalDate.now();
+    }
 }

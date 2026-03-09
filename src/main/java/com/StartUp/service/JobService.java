@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+
 import java.util.List;
 
 @Service
@@ -29,7 +31,11 @@ public class JobService {
         EmployerProfile employer = employerProfileRepository.findByUserEmail(username)
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Employer not found"));
 
+        if(jobRequest.endDate().isBefore(jobRequest.startDate())){
+            throw new AppExceptions.BadRequestException("End date must be greater than start date");
+        }
         Job job = new Job();
+
         job.setEmployer(employer);
         job.setTitle(jobRequest.title());
         job.setCategory(jobRequest.category());
@@ -41,6 +47,7 @@ public class JobService {
         job.setStartDate(jobRequest.startDate());
         job.setEndDate(jobRequest.endDate());
         job.setStatus(JobStatus.OPEN);
+        job.onCreate();
 
         return mapToJobResponse(jobRepository.save(job));
     }
@@ -74,6 +81,10 @@ public class JobService {
         Job job = jobRepository.findById(jobId)
                 .filter(j -> j.getEmployer().getId().equals(employer.getId()))
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Job not found"));
+
+        if(jobRequest.endDate().isBefore(jobRequest.startDate())){
+            throw new AppExceptions.BadRequestException("End date must be greater than start date");
+        }
 
         job.setTitle(jobRequest.title());
         job.setCategory(jobRequest.category());
