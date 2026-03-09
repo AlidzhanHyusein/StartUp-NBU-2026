@@ -3,49 +3,62 @@ package com.StartUp.entity;
 import com.StartUp.enums.ApplicationStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CollectionId;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@Table(name = "job_applications")
+@Getter
+@Setter
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Application {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id")
+    @JoinColumn(name = "student_id", nullable = false)
     private StudentProfile student;
 
-    private String email;
-
-    private String firstName;
-
-    private String lastName;
-
-    private String city;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "job_id")
+    @JoinColumn(name = "job_id", nullable = false)
     private Job job;
 
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "last_name")
+    private String lastName;
+
+    @Column(name = "email")
+    private String email;
+
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
+    @Column(name = "city")
+    private String city;
+
+    @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private ApplicationStatus status;
 
-    private LocalDate appliedAt;
-
     private String resumeUrl;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "message_to_company", columnDefinition = "TEXT")
     private String messageToCompany;
+
+    @Column(name = "applied_at", nullable = false)
+    private LocalDateTime appliedAt;
 
     @PrePersist
     public void onApplied(){
-        this.appliedAt = LocalDate.now();
+        this.appliedAt = LocalDateTime.now();
     }
 }
