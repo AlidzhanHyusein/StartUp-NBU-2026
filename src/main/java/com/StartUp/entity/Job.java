@@ -13,6 +13,8 @@ import org.springframework.data.annotation.CreatedDate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -31,6 +33,9 @@ public class Job {
 
     @Column(name = "title", nullable = false)
     private String title;
+
+    @OneToMany
+    private List<Application> application;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "category")
@@ -63,7 +68,11 @@ public class Job {
     @Column(name = "status")
     private JobStatus status;
 
-    @CreatedDate
-    @Column(updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDate createdAt;
+
+    @PrePersist
+    public void onCreate() {
+        this.createdAt = LocalDate.now();
+    }
 }

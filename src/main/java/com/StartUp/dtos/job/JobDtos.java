@@ -5,10 +5,11 @@ import com.StartUp.enums.JobCategory;
 import com.StartUp.enums.JobLocation;
 import com.StartUp.enums.JobStatus;
 import com.StartUp.enums.JobType;
+import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-
+@Data
 public class JobDtos {
     public record JobResponse (
             Long id,

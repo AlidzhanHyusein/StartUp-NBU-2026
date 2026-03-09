@@ -1,15 +1,20 @@
 package com.StartUp.service;
 
 import com.StartUp.dtos.employer.EmployerDtos;
+import com.StartUp.entity.Application;
 import com.StartUp.entity.EmployerProfile;
+import com.StartUp.entity.Job;
 import com.StartUp.entity.User;
+import com.StartUp.enums.ApplicationStatus;
 import com.StartUp.enums.Role;
 import com.StartUp.exception.AppExceptions;
+import com.StartUp.repository.ApplicationRepository;
 import com.StartUp.repository.EmployerProfileRepository;
 import com.StartUp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,6 +23,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -26,6 +32,7 @@ public class EmployerProfileService {
 
     private final EmployerProfileRepository employerProfileRepository;
     private final UserRepository userRepository;
+    private final ApplicationRepository applicationRepository;
 
     @Value("${app.upload.dir}")
     private String uploadDir;
