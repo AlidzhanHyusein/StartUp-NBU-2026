@@ -14,6 +14,7 @@ import org.springframework.data.annotation.CreatedDate;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -32,6 +33,9 @@ public class Job {
 
     @Column(name = "title", nullable = false)
     private String title;
+
+    @OneToMany
+    private List<Application> application;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "category")

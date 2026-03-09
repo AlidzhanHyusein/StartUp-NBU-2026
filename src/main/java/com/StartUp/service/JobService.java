@@ -8,12 +8,15 @@ import com.StartUp.exception.AppExceptions;
 import com.StartUp.repository.EmployerProfileRepository;
 import com.StartUp.repository.JobRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -112,8 +115,9 @@ public class JobService {
         jobRepository.save(job);
     }
 
-    public List<JobDtos.JobResponse> filterJobs(JobDtos.JobFilter jobFilter) {
-        return jobRepository.findAll().stream()
+    @Transactional
+    public Page<JobDtos.JobResponse> filterJobs(JobDtos.JobFilter jobFilter, Pageable pageable) {
+        List<JobDtos.JobResponse> filteredJobs = jobRepository.findAll().stream()
                 .filter(job -> jobFilter.jobCategory() == null || job.getCategory() == jobFilter.jobCategory())
                 .filter(job -> jobFilter.jobType() == null || job.getType() == jobFilter.jobType())
                 .filter(job -> jobFilter.jobLocation() == null || job.getLocation() == jobFilter.jobLocation())
@@ -122,6 +126,21 @@ public class JobService {
                 .filter(job -> jobFilter.status() == null || job.getStatus() == JobStatus.OPEN)
                 .map(this::mapToJobResponse)
                 .toList();
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), filteredJobs.size());
+        List<JobDtos.JobResponse> pageContent = start > filteredJobs.size() ? List.of() : filteredJobs.subList(start, end);
+
+        return new PageImpl<>(pageContent, pageable, filteredJobs.size());
+    }
+
+    @Scheduled(cron = "0 59 23 * * *")
+    @Transactional
+    public void deleteExpiredJobs() {
+        List<Job> expiredJobs = jobRepository.findByEndDateLessThanEqual(LocalDate.now());
+        if (!expiredJobs.isEmpty()) {
+            jobRepository.deleteAll(expiredJobs);
+        }
     }
 
     private JobDtos.JobResponse mapToJobResponse(Job job) {

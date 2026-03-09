@@ -8,6 +8,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "student_profiles")
@@ -38,6 +39,9 @@ public class StudentProfile {
 
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
+
+    @OneToMany
+    private List<Application> application;
 
     private String phone;
     private String city;
