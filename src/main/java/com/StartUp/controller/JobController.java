@@ -20,15 +20,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
-import java.time.Duration;
-import java.util.List;
+
 
 @Tag(name = "Job", description = "CRUD operations about job")
 @CrossOrigin
 @RestController
 @RequestMapping("/api/jobs")
 public class JobController {
-    public final JobService jobService;
+    private final JobService jobService;
 
     public JobController(JobService jobService) {
         this.jobService = jobService;
@@ -80,6 +79,7 @@ public class JobController {
         return ResponseEntity.noContent().build();
     }
     @GetMapping("/filter")
+    @PreAuthorize("hasAnyRole('STUDENT', 'EMPLOYER')")
     public ResponseEntity<Page<JobDtos.JobResponse>> filterJobs(
             @RequestParam(name = "jobCategory", required = false) JobCategory jobCategory,
             @RequestParam(required = false) JobType jobType,
@@ -88,12 +88,8 @@ public class JobController {
             @RequestParam(required = false) BigDecimal minSalary,
             @RequestParam(required = false) JobStatus status,
             @PageableDefault(size = 10, sort = "id") Pageable pageable) {
-        try {
-            JobDtos.JobFilter jobFilter = new JobDtos.JobFilter(jobCategory, jobType, jobLocation, duration, minSalary, status);
-            return ResponseEntity.ok(jobService.filterJobs(jobFilter, pageable));
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
+
+        JobDtos.JobFilter jobFilter = new JobDtos.JobFilter(jobCategory, jobType, jobLocation, duration, minSalary, status);
+        return ResponseEntity.ok(jobService.filterJobs(jobFilter, pageable));
     }
 }

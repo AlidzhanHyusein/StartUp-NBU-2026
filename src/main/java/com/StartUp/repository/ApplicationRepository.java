@@ -21,5 +21,10 @@ public interface ApplicationRepository extends JpaRepository<Application,Long> {
     )
     Page<Application> findAllByStatus(@Param("status") ApplicationStatus status, Pageable pageable);
 
+    Page<Application> findAllByJob_Employer_Id(Long employerId, Pageable pageable);
+
+    Page<Application> findAllByJob_Employer_IdAndStatus(Long employerId, ApplicationStatus status, Pageable pageable);
+
+
     boolean existsByStudentAndJob(StudentProfile studentProfile, Job job);
 }

@@ -40,7 +40,7 @@ public class StudentProfile {
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
-    @OneToMany
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Application> application;
 
     private String phone;

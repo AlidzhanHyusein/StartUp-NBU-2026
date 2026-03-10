@@ -4,6 +4,7 @@ import com.StartUp.dtos.application.ApplicationDtos;
 import com.StartUp.enums.ApplicationStatus;
 import com.StartUp.service.ApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,8 +29,8 @@ public class ApplicationController {
     @Operation(summary = "Add application", description = "Adds a job application")
     @PostMapping
     @PreAuthorize("hasRole('STUDENT')")
-    public ResponseEntity<ApplicationDtos.ApplicationResponse> applyToJob(@RequestParam Long id) {
-        ApplicationDtos.ApplicationResponse response = applicationService.appliedToJob(id);
+    public ResponseEntity<ApplicationDtos.ApplicationResponse> applyToJob(@RequestParam Long id, @RequestPart(required = false)@RequestBody  String messageToCompany) {
+        ApplicationDtos.ApplicationResponse response = applicationService.appliedToJob(id,messageToCompany);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -49,4 +50,15 @@ public class ApplicationController {
         ApplicationDtos.ApplicationResponse response = applicationService.applicationStatusChange(id, status);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    @Operation(summary = "Get all applications for employer", description = "Employer sees all applications to their jobs")
+    @GetMapping("/employer")
+    @PreAuthorize("hasRole('EMPLOYER')")
+    public ResponseEntity<Page<ApplicationDtos.ApplicationResponse>> getEmployerApplications(
+            @RequestParam(required = false) ApplicationStatus status,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(applicationService.findAllEmployerApplications(status, pageable));
+    }
+
+
 }

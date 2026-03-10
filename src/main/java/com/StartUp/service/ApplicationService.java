@@ -33,7 +33,7 @@ public class ApplicationService {
 
 
     @Transactional()
-    public ApplicationDtos.ApplicationResponse appliedToJob(Long jobId) {
+    public ApplicationDtos.ApplicationResponse appliedToJob(Long jobId,String messageToCompany) {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -56,6 +56,9 @@ public class ApplicationService {
                 .student(studentProfile)
                 .status(ApplicationStatus.PENDING)
                 .resumeUrl(studentProfile.getCvUrl())
+                .phoneNumber(studentProfile.getPhone())
+                .appliedAt(LocalDateTime.now())
+                .messageToCompany(messageToCompany)
                 .build();
 
         studentProfile.getApplication().add(newApplication);
@@ -83,11 +86,34 @@ public class ApplicationService {
         return mapToResponse(applicationRepository.save(application));
     }
 
+    @Transactional(readOnly = true)
+    public Page<ApplicationDtos.ApplicationResponse> findAllEmployerApplications(ApplicationStatus status, Pageable pageable) {
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        EmployerProfile employer = employerProfileRepository.findByUser_Email(email)
+                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Employer not found"));
+
+        if (status != null) {
+            return applicationRepository.findAllByJob_Employer_IdAndStatus(employer.getId(), status, pageable)
+                    .map(this::mapToResponse);
+        }
+
+        return applicationRepository.findAllByJob_Employer_Id(employer.getId(), pageable)
+                .map(this::mapToResponse);
+    }
+
     private Job findJobById(Long jobId){
         return jobRepository.findById(jobId).orElseThrow(() -> new AppExceptions.ResourceNotFoundException("The job was not found"));
     }
 
-    private ApplicationDtos.ApplicationResponse mapToResponse(Application application){
+    private ApplicationDtos.ApplicationResponse mapToResponse(Application application) {
+        ApplicationDtos.JobSummary jobSummary = new ApplicationDtos.JobSummary(
+                application.getJob().getId(),
+                application.getJob().getTitle(),
+                application.getJob().getEmployer().getCompanyName(),
+                application.getJob().getDescription()
+        );
 
         return new ApplicationDtos.ApplicationResponse(
                 application.getId(),
@@ -101,9 +127,8 @@ public class ApplicationService {
                 application.getResumeUrl(),
                 application.getMessageToCompany(),
                 application.getStatus(),
-                application.getAppliedAt()
+                application.getAppliedAt(),
+                jobSummary
         );
-
     }
-
 }

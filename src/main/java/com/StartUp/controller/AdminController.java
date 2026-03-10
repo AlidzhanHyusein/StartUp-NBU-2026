@@ -1,6 +1,7 @@
 package com.StartUp.controller;
 
 import com.StartUp.dtos.admin.AdminDtos;
+import com.StartUp.dtos.user.UserDtos;
 import com.StartUp.entity.Category;
 import com.StartUp.entity.User;
 import com.StartUp.enums.UserStatus;
@@ -9,7 +10,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -37,7 +37,7 @@ public class AdminController {
 
     @Operation(summary = "Get all users", description = "Returns a paginated list of all registered users")
     @GetMapping("/users")
-    public ResponseEntity<Page<User>> getAllUsers(@PageableDefault(size = 20)Pageable pageable){
+    public ResponseEntity<Page<UserDtos.UserProfileResponse>> getAllUsers(@PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(adminService.getAllUsers(pageable));
     }
 
@@ -82,13 +82,13 @@ public class AdminController {
 
     @Operation(summary = "Create a category", description = "Creates a new job category")
     @PostMapping("/categories")
-    public ResponseEntity<Category> createCategory(@RequestParam @Valid AdminDtos.CategoryRequest request){
+    public ResponseEntity<Category> createCategory(@RequestBody @Valid AdminDtos.CategoryRequest request){
         return ResponseEntity.status(HttpStatus.CREATED).body(adminService.createCategory(request));
     }
 
     @Operation(summary = "Update a category", description = "Updates an existing job category by its ID")
     @PutMapping("/categories/{id}")
-    public ResponseEntity<Category> updateCategory(@PathVariable Long id, @RequestParam @Valid AdminDtos.CategoryRequest request){
+    public ResponseEntity<Category> updateCategory(@PathVariable Long id, @RequestBody @Valid AdminDtos.CategoryRequest request){
         return ResponseEntity.ok(adminService.updateCategory(id,request));
     }
 
