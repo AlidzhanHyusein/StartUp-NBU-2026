@@ -86,7 +86,8 @@ public class ApplicationService {
 
         application.setStatus(status);
 
-        emailService.sendApplicationStatusEmail(application.getStudent().getUser().getEmail(), status, application.getJob());
+        emailService.sendApplicationStatusEmail(
+                application.getStudent().getUser().getEmail(), status, application.getJob());
         return mapToResponse(applicationRepository.save(application));
     }
 
