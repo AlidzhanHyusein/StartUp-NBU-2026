@@ -1,5 +1,7 @@
 package com.StartUp.service;
 
+import com.StartUp.entity.Job;
+import com.StartUp.enums.ApplicationStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -22,4 +24,42 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    public void sendApplicationStatusEmail(String email, ApplicationStatus status, Job job){
+        String subject;
+        String text;
+
+        if(status == ApplicationStatus.ACCEPTED){
+            subject = "Congratulations! Your application was accepted 🎉";
+            text = String.format(
+                    "Great news! Your application for the position '%s' at '%s' has been accepted.\n" +
+                            "The employer will contact you soon.",
+                    job.getTitle(),
+                    job.getEmployer().getCompanyName()
+            );
+        } else if(status == ApplicationStatus.REJECTED){
+            subject = "Your application was not successful";
+            text = String.format(
+                    "Unfortunately your application for the position '%s' at '%s' has been rejected.\n" +
+                            "Keep applying and good luck!",
+                    job.getTitle(),
+                    job.getEmployer().getCompanyName()
+            );
+        } else {
+            subject = "Your application status has changed";
+            text = String.format(
+                    "Your application for the position '%s' at '%s' has been updated to: %s",
+                    job.getTitle(),
+                    job.getEmployer().getCompanyName(),
+                    status
+            );
+        }
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(email);
+        message.setSubject(subject);
+        message.setText(text);
+        mailSender.send(message);
+    }
+
 }
