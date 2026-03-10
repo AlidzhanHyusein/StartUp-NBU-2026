@@ -136,11 +136,8 @@ public class JobService {
 
     @Scheduled(cron = "0 59 23 * * *")
     @Transactional
-    public void deleteExpiredJobs() {
-        List<Job> expiredJobs = jobRepository.findByEndDateLessThanEqual(LocalDate.now());
-        if (!expiredJobs.isEmpty()) {
-            jobRepository.deleteAll(expiredJobs);
-        }
+    public void expireJobs() {
+        jobRepository.expireJobs(LocalDate.now(), JobStatus.EXPIRED);
     }
 
     private JobDtos.JobResponse mapToJobResponse(Job job) {
@@ -156,6 +153,7 @@ public class JobService {
                 job.getDuration(),
                 job.getSalary(),
                 job.getLocation(),
+                job.getStatus(),
                 job.getDescription(),
                 job.getStartDate(),
                 job.getEndDate()

@@ -20,6 +20,7 @@ public class JobDtos {
             Integer duration,
             BigDecimal salary,
             JobLocation location,
+            JobStatus jobStatus,
             String description,
             LocalDate startDate,
             LocalDate endDate

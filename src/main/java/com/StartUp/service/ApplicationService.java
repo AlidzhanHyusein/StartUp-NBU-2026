@@ -25,6 +25,8 @@ public class ApplicationService {
     private final JobRepository jobRepository;
     private final StudentProfileRepository studentProfileRepository;
     private final EmployerProfileRepository employerProfileRepository;
+    private final MessageService messageService;
+    private final EmailService emailService;
 
     @Transactional(readOnly = true)
     public Page<ApplicationDtos.ApplicationResponse> findAllByStatus(ApplicationStatus status, Pageable pageable){
@@ -117,6 +119,9 @@ public class ApplicationService {
         }
 
         application.setStatus(status);
+
+        emailService.sendApplicationStatusEmail(
+                application.getStudent().getUser().getEmail(), status, application.getJob());
         return mapToResponse(applicationRepository.save(application));
     }
 
