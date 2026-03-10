@@ -1,5 +1,6 @@
 package com.StartUp.service;
 
+import com.StartUp.dtos.application.ApplicationDtos;
 import com.StartUp.entity.Application;
 import com.StartUp.entity.EmployerProfile;
 import com.StartUp.entity.Job;
@@ -14,6 +15,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class ApplicationService {
@@ -23,14 +26,14 @@ public class ApplicationService {
     private final StudentProfileRepository studentProfileRepository;
     private final EmployerProfileRepository employerProfileRepository;
 
-
-    public Page<Application> findAllByStatus(ApplicationStatus status, Pageable pageable){
-        return applicationRepository.findAllByStatus(status,pageable);
+    @Transactional(readOnly = true)
+    public Page<ApplicationDtos.ApplicationResponse> findAllByStatus(ApplicationStatus status, Pageable pageable){
+        return applicationRepository.findAllByStatus(status,pageable).map(this::mapToResponse);
     }
 
 
-    @Transactional
-    public Application appliedToJob(Long jobId) {
+    @Transactional()
+    public ApplicationDtos.ApplicationResponse appliedToJob(Long jobId) {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -52,16 +55,17 @@ public class ApplicationService {
                 .job(job)
                 .student(studentProfile)
                 .status(ApplicationStatus.PENDING)
+                .resumeUrl(studentProfile.getCvUrl())
                 .build();
 
         studentProfile.getApplication().add(newApplication);
         job.getApplication().add(newApplication);
 
-        return applicationRepository.save(newApplication);
+        return mapToResponse(applicationRepository.save(newApplication));
     }
 
     @Transactional
-    public Application applicationStatusChange(Long applicationId, ApplicationStatus status) {
+    public ApplicationDtos.ApplicationResponse applicationStatusChange(Long applicationId, ApplicationStatus status) {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -76,12 +80,30 @@ public class ApplicationService {
         }
 
         application.setStatus(status);
-        return applicationRepository.save(application);
+        return mapToResponse(applicationRepository.save(application));
     }
 
     private Job findJobById(Long jobId){
         return jobRepository.findById(jobId).orElseThrow(() -> new AppExceptions.ResourceNotFoundException("The job was not found"));
     }
 
+    private ApplicationDtos.ApplicationResponse mapToResponse(Application application){
+
+        return new ApplicationDtos.ApplicationResponse(
+                application.getId(),
+                application.getStudent().getId(),
+                application.getJob().getId(),
+                application.getFirstName(),
+                application.getLastName(),
+                application.getEmail(),
+                application.getPhoneNumber(),
+                application.getCity(),
+                application.getResumeUrl(),
+                application.getMessageToCompany(),
+                application.getStatus(),
+                application.getAppliedAt()
+        );
+
+    }
 
 }

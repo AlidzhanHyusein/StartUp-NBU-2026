@@ -1,7 +1,13 @@
 package com.StartUp.dtos.application;
 
 import com.StartUp.enums.ApplicationStatus;
+import lombok.Builder;
+import lombok.Data;
+
 import java.time.LocalDateTime;
+
+@Builder
+@Data
 
 public class ApplicationDtos {
     public record ApplicationResponse(

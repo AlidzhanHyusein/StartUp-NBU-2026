@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/applications")
 public class ApplicationController {
 
-    public final ApplicationService applicationService;
+    private final ApplicationService applicationService;
 
     public ApplicationController(ApplicationService applicationService) {
         this.applicationService = applicationService;
@@ -41,9 +41,10 @@ public class ApplicationController {
         return ResponseEntity.ok(applicationService.findAllByStatus(status, page));
     }
 
-    @PostMapping
+    @Operation(summary = "Change application status", description = "Changes the status of a job application")
+    @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('EMPLOYER')")
-    public ResponseEntity<ApplicationDtos.ApplicationResponse> changeApplicationStatus(@RequestParam Long id,
+    public ResponseEntity<ApplicationDtos.ApplicationResponse> changeApplicationStatus(@PathVariable Long id,
                                                                                        @RequestParam ApplicationStatus status) {
         ApplicationDtos.ApplicationResponse response = applicationService.applicationStatusChange(id, status);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
