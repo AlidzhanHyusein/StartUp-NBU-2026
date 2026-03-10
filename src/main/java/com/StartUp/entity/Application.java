@@ -3,16 +3,16 @@ package com.StartUp.entity;
 import com.StartUp.enums.ApplicationStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CollectionId;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
-@Table(name = "job_applications")
-@Getter
-@Setter
+@Table(
+        name = "job_applications",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"student_id","job_id"})
+        }
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -30,19 +30,19 @@ public class Application {
     @JoinColumn(name = "job_id", nullable = false)
     private Job job;
 
-    @Column(name = "first_name")
+    @Column(name = "first_name", nullable = false)
     private String firstName;
 
-    @Column(name = "last_name")
+    @Column(name = "last_name", nullable = false)
     private String lastName;
 
-    @Column(name = "email")
+    @Column(name = "email", nullable = false)
     private String email;
 
-    @Column(name = "phone_number")
+    @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
-    @Column(name = "city")
+    @Column(name = "city", nullable = false)
     private String city;
 
     @Column(name = "status")

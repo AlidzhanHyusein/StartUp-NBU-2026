@@ -74,7 +74,7 @@ public class JobController {
     @DeleteMapping("/{jobId}")
     @PreAuthorize("hasRole('EMPLOYER')")
     public ResponseEntity<Void> deleteJob(@PathVariable Long jobId,
-                                                         @AuthenticationPrincipal UserDetails userDetails) {
+                                          @AuthenticationPrincipal UserDetails userDetails) {
         jobService.deleteMyJob(jobId, userDetails.getUsername());
         return ResponseEntity.noContent().build();
     }

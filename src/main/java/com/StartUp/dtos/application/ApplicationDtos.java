@@ -1,13 +1,10 @@
 package com.StartUp.dtos.application;
 
-import com.StartUp.entity.Application;
-import com.StartUp.entity.Job;
 import com.StartUp.enums.ApplicationStatus;
 import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Builder
 @Data
@@ -15,8 +12,6 @@ import java.util.List;
 public class ApplicationDtos {
     public record ApplicationResponse(
             Long id,
-            Long studentId,
-            Long jobId,
             String firstName,
             String lastName,
             String email,
@@ -30,21 +25,23 @@ public class ApplicationDtos {
     ) {
     }
 
-    public record JobSummary(
-            Long id,
-            String title,
-            String company,
-            String description
-    ) {}
-
     public record ApplicationRequest(
             String firstName,
             String lastName,
             String email,
             String phoneNumber,
             String city,
+            String resumeUrl,
             String messageToCompany,
             ApplicationStatus status
     ) {
     }
+
+    public record JobSummary(
+            Long id,
+            Long studentId,
+            String title,
+            String company,
+            String description
+    ) {}
 }
