@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import org.springframework.web.bind.annotation.RequestPart;
 
 @Data
 
@@ -25,7 +26,20 @@ public class AuthDtos {
             String lastName,
 
             @NotNull
-            Role role
+            Role role,
+
+            @NotBlank
+            String phoneNumber,
+
+            @NotBlank
+            String city,
+
+            @NotBlank
+            String resumeUrl,
+
+            @NotBlank
+            @RequestPart(required = false)
+            String messageToCompany
     ) {}
 
     public record LoginRequest(
