@@ -1,6 +1,10 @@
 package com.StartUp.controller;
 
 import com.StartUp.dtos.job.JobDtos;
+import com.StartUp.enums.JobCategory;
+import com.StartUp.enums.JobLocation;
+import com.StartUp.enums.JobStatus;
+import com.StartUp.enums.JobType;
 import com.StartUp.service.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,14 +18,16 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.data.domain.Pageable;
-import java.util.List;
+
+import java.math.BigDecimal;
+
 
 @Tag(name = "Job", description = "CRUD operations about job")
 @CrossOrigin
 @RestController
 @RequestMapping("/api/jobs")
 public class JobController {
-    public final JobService jobService;
+    private final JobService jobService;
 
     public JobController(JobService jobService) {
         this.jobService = jobService;
@@ -68,8 +74,22 @@ public class JobController {
     @DeleteMapping("/{jobId}")
     @PreAuthorize("hasRole('EMPLOYER')")
     public ResponseEntity<Void> deleteJob(@PathVariable Long jobId,
-                                                         @AuthenticationPrincipal UserDetails userDetails) {
+                                          @AuthenticationPrincipal UserDetails userDetails) {
         jobService.deleteMyJob(jobId, userDetails.getUsername());
         return ResponseEntity.noContent().build();
+    }
+    @GetMapping("/filter")
+    @PreAuthorize("hasAnyRole('STUDENT', 'EMPLOYER')")
+    public ResponseEntity<Page<JobDtos.JobResponse>> filterJobs(
+            @RequestParam(name = "jobCategory", required = false) JobCategory jobCategory,
+            @RequestParam(required = false) JobType jobType,
+            @RequestParam(required = false) JobLocation jobLocation,
+            @RequestParam(required = false) Integer duration,
+            @RequestParam(required = false) BigDecimal minSalary,
+            @RequestParam(required = false) JobStatus status,
+            @PageableDefault(size = 10, sort = "id") Pageable pageable) {
+
+        JobDtos.JobFilter jobFilter = new JobDtos.JobFilter(jobCategory, jobType, jobLocation, duration, minSalary, status);
+        return ResponseEntity.ok(jobService.filterJobs(jobFilter, pageable));
     }
 }

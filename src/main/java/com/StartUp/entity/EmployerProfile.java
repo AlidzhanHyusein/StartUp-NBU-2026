@@ -1,5 +1,6 @@
 package com.StartUp.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -31,7 +32,6 @@ public class EmployerProfile {
 
     @Column(length = 1200)
     private String description;
-
     private String website;
     private String phone;
     private String city;

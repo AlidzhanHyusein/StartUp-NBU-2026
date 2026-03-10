@@ -12,4 +12,6 @@ public interface EmployerProfileRepository extends JpaRepository<EmployerProfile
     boolean existsByUserId(Long userId);
 
     Optional<EmployerProfile> findByUserEmail(String email);
+
+    Optional<EmployerProfile> findByUser_Email(String email);
 }
