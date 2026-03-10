@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application,Long> {
@@ -27,4 +28,7 @@ public interface ApplicationRepository extends JpaRepository<Application,Long> {
 
 
     boolean existsByStudentAndJob(StudentProfile studentProfile, Job job);
+
+    Page<Application> findAllByStudent_IdAndStatus(Long studentId, ApplicationStatus status, Pageable pageable);
+    Page<Application> findAllByStudent_Id(Long studentId, Pageable pageable);
 }

@@ -45,8 +45,6 @@ public class User {
     @Column(nullable = false)
     private String city;
 
-    private String messageToCompany;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default

@@ -30,12 +30,22 @@ public class ApplicationService {
 
     @Transactional(readOnly = true)
     public Page<ApplicationDtos.ApplicationResponse> findAllByStatus(ApplicationStatus status, Pageable pageable){
-        return applicationRepository.findAllByStatus(status,pageable).map(this::mapToResponse);
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        StudentProfile student = studentProfileRepository.findByUser_Email(email)
+                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Student profile not found"));
+
+        if (status != null) {
+            return applicationRepository.findAllByStudent_IdAndStatus(student.getId(), status, pageable)
+                    .map(this::mapToResponse);
+        }
+
+        return applicationRepository.findAllByStudent_Id(student.getId(), pageable)
+                .map(this::mapToResponse);
     }
 
-
     @Transactional()
-    public ApplicationDtos.ApplicationResponse appliedToJob(Long jobId,String messageToCompany) {
+    public ApplicationDtos.ApplicationResponse appliedToJob(Long jobId, ApplicationDtos.ApplicationRequest request) {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -46,21 +56,21 @@ public class ApplicationService {
 
         boolean alreadyApplied = applicationRepository.existsByStudentAndJob(studentProfile, job);
         if (alreadyApplied) {
-            throw new IllegalStateException("Student has already applied to this job");
+            throw new AppExceptions.BadRequestException("Student has already applied to this job");
         }
 
         Application newApplication = Application.builder()
-                .email(studentProfile.getUser().getEmail())
-                .city(studentProfile.getCity())
+                .student(studentProfile)
+                .job(job)
                 .firstName(studentProfile.getUser().getFirstName())
                 .lastName(studentProfile.getUser().getLastName())
-                .job(job)
-                .student(studentProfile)
-                .status(ApplicationStatus.PENDING)
-                .resumeUrl(studentProfile.getCvUrl())
+                .email(studentProfile.getUser().getEmail())
                 .phoneNumber(studentProfile.getPhone())
+                .city(studentProfile.getCity())
+                .resumeUrl(request.resumeUrl())
+                .messageToCompany(request.messageToCompany())
+                .status(ApplicationStatus.PENDING)
                 .appliedAt(LocalDateTime.now())
-                .messageToCompany(messageToCompany)
                 .build();
 
         studentProfile.getApplication().add(newApplication);
@@ -84,10 +94,63 @@ public class ApplicationService {
             throw new AppExceptions.BadRequestException("This job offer does not belong to you");
         }
 
+        ApplicationStatus currentStatus = application.getStatus();
+
+        if (currentStatus == ApplicationStatus.ACCEPTED) {
+            if (status == ApplicationStatus.PENDING ||
+                    status == ApplicationStatus.REVIEWED ||
+                    status == ApplicationStatus.REJECTED) {
+                throw new AppExceptions.BadRequestException(
+                        "Cannot change status from ACCEPTED to " + status + ". Only COMPLETED is allowed."
+                );
+            }
+        }
+
+        if (currentStatus == ApplicationStatus.WITHDRAWN) {
+            throw new AppExceptions.BadRequestException("Cannot change status of a withdrawn application.");
+        }
+
+        if (currentStatus == ApplicationStatus.REJECTED) {
+            throw new AppExceptions.BadRequestException("Cannot change status of a rejected application.");
+        }
+
+        if(currentStatus == ApplicationStatus.COMPLETED) {
+            throw new AppExceptions.BadRequestException("Cannot change status of a completed application.");
+        }
+
         application.setStatus(status);
 
         emailService.sendApplicationStatusEmail(
                 application.getStudent().getUser().getEmail(), status, application.getJob());
+        return mapToResponse(applicationRepository.save(application));
+    }
+
+    @Transactional
+    public ApplicationDtos.ApplicationResponse withdrawApplication(Long applicationId) {
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        StudentProfile student = studentProfileRepository.findByUser_Email(email)
+                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Student profile not found"));
+
+        Application application = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Application not found"));
+
+        if (!application.getStudent().getId().equals(student.getId())) {
+            throw new AppExceptions.BadRequestException("This application does not belong to you");
+        }
+
+        if (application.getStatus() == ApplicationStatus.WITHDRAWN) {
+            throw new AppExceptions.BadRequestException("Application is already withdrawn");
+        }
+
+        if (application.getStatus() == ApplicationStatus.COMPLETED) {
+            throw new AppExceptions.BadRequestException(
+                    "Cannot withdraw an application that is already " + application.getStatus()
+            );
+        }
+
+        application.setStatus(ApplicationStatus.WITHDRAWN);
         return mapToResponse(applicationRepository.save(application));
     }
 
@@ -115,6 +178,7 @@ public class ApplicationService {
     private ApplicationDtos.ApplicationResponse mapToResponse(Application application) {
         ApplicationDtos.JobSummary jobSummary = new ApplicationDtos.JobSummary(
                 application.getJob().getId(),
+                application.getStudent().getId(),
                 application.getJob().getTitle(),
                 application.getJob().getEmployer().getCompanyName(),
                 application.getJob().getDescription()
@@ -122,8 +186,6 @@ public class ApplicationService {
 
         return new ApplicationDtos.ApplicationResponse(
                 application.getId(),
-                application.getStudent().getId(),
-                application.getJob().getId(),
                 application.getFirstName(),
                 application.getLastName(),
                 application.getEmail(),

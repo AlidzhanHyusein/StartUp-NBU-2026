@@ -4,7 +4,7 @@ import com.StartUp.dtos.application.ApplicationDtos;
 import com.StartUp.enums.ApplicationStatus;
 import com.StartUp.service.ApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import org.springframework.web.bind.annotation.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,17 +27,18 @@ public class ApplicationController {
     }
 
     @Operation(summary = "Add application", description = "Adds a job application")
-    @PostMapping
+    @PostMapping("/{jobId}")
     @PreAuthorize("hasRole('STUDENT')")
-    public ResponseEntity<ApplicationDtos.ApplicationResponse> applyToJob(@RequestParam Long id, @RequestPart(required = false)@RequestBody  String messageToCompany) {
-        ApplicationDtos.ApplicationResponse response = applicationService.appliedToJob(id,messageToCompany);
+    public ResponseEntity<ApplicationDtos.ApplicationResponse> applyToJob(@PathVariable Long jobId,
+                                                                          @RequestBody ApplicationDtos.ApplicationRequest request) {
+        ApplicationDtos.ApplicationResponse response = applicationService.appliedToJob(jobId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @Operation(summary = "Get all applications", description = "Gets all job applications")
-    @GetMapping
+    @GetMapping("/my")
     @PreAuthorize("hasRole('STUDENT')")
-    public ResponseEntity<Page<ApplicationDtos.ApplicationResponse>> getAllApplications(@RequestParam ApplicationStatus status,
+    public ResponseEntity<Page<ApplicationDtos.ApplicationResponse>> getAllApplications(@RequestParam(required = false) ApplicationStatus status,
                                                                                         @PageableDefault(size = 20) Pageable page) {
         return ResponseEntity.ok(applicationService.findAllByStatus(status, page));
     }
@@ -51,6 +52,14 @@ public class ApplicationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @Operation(summary = "Withdraw application", description = "Student withdraws their application")
+    @PatchMapping("/{id}/withdraw")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<ApplicationDtos.ApplicationResponse> withdrawApplication(@PathVariable Long id) {
+        ApplicationDtos.ApplicationResponse response = applicationService.withdrawApplication(id);
+        return ResponseEntity.ok(response);
+    }
+
     @Operation(summary = "Get all applications for employer", description = "Employer sees all applications to their jobs")
     @GetMapping("/employer")
     @PreAuthorize("hasRole('EMPLOYER')")
@@ -59,6 +68,4 @@ public class ApplicationController {
             @PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(applicationService.findAllEmployerApplications(status, pageable));
     }
-
-
 }
