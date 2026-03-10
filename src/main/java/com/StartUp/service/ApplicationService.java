@@ -56,9 +56,8 @@ public class ApplicationService {
                 .student(studentProfile)
                 .status(ApplicationStatus.PENDING)
                 .resumeUrl(studentProfile.getCvUrl())
-                .city(studentProfile.getCity())
                 .phoneNumber(studentProfile.getPhone())
-                .resumeUrl(studentProfile.getCvUrl())
+                .appliedAt(LocalDateTime.now())
                 .messageToCompany(messageToCompany)
                 .build();
 

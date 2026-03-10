@@ -11,7 +11,6 @@ import com.StartUp.repository.EmployerProfileRepository;
 import com.StartUp.repository.StudentProfileRepository;
 import com.StartUp.repository.UserRepository;
 import com.StartUp.security.JwtService;
-import com.StartUp.dtos.auth.AuthDtos;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -47,6 +46,21 @@ public class AuthService {
             throw new AppExceptions.EmailAlreadyExistsException("Имейлът вече е регистриран.");
         }
 
+        if (request.role() == Role.STUDENT) {
+            if (request.university() == null || request.university().isBlank()) {
+                throw new AppExceptions.BadRequestException("University is required for students");
+            }
+            if (request.major() == null || request.major().isBlank()) {
+                throw new AppExceptions.BadRequestException("Major is required for students");
+            }
+        }
+
+        if (request.role() == Role.EMPLOYER) {
+            if (request.companyName() == null || request.companyName().isBlank()) {
+                throw new AppExceptions.BadRequestException("Company name is required for employers");
+            }
+        }
+
         if(request.role() == Role.ADMIN){
             throw new AppExceptions.BadRequestException("Не може да се регистрирате като админ");
         }
@@ -61,6 +75,7 @@ public class AuthService {
                 .phoneNumber(request.phoneNumber())
                 .city(request.city())
                 .status(UserStatus.PENDING)
+                .createdAt(LocalDateTime.now())
                 .build();
 
         String token = UUID.randomUUID().toString();
@@ -141,7 +156,11 @@ public class AuthService {
                     .city(user.getCity())
                     .createdAt(LocalDateTime.now())
                     .phone(user.getPhoneNumber())
+                    .country(request.country())
                     .githubUrl(request.github())
+                    .dateOfBirth(request.dateOfBirth())
+                    .major(request.major())
+                    .university(request.university())
                     .linkedinUrl(request.linkedin())
                     .university(request.university())
                     .application(new ArrayList<>())
@@ -151,8 +170,15 @@ public class AuthService {
         } else if (user.getRole() == Role.EMPLOYER) {
             EmployerProfile profile = EmployerProfile.builder()
                     .user(user)
+                    .city(user.getCity())
+                    .createdAt(LocalDateTime.now())
+                    .isVerified(user.isEnabled())
+                    .website(request.website())
+                    .phone(user.getPhoneNumber())
+                    .country(request.country())
                     .companyName(request.companyName() != null ? request.companyName() : user.getFirstName() + "'s Company")
                     .website(request.website())
+                    .createdAt(LocalDateTime.now())
                     .build();
             employerProfileRepository.save(profile);
         }

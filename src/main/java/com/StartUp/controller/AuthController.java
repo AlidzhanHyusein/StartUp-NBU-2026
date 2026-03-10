@@ -2,11 +2,9 @@ package com.StartUp.controller;
 
 import com.StartUp.dtos.auth.AuthDtos;
 import com.StartUp.entity.User;
-import com.StartUp.enums.Role;
 import com.StartUp.enums.UserStatus;
 import com.StartUp.repository.UserRepository;
 import com.StartUp.service.AuthService;
-import com.StartUp.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -30,9 +28,7 @@ public class AuthController {
     @Operation(summary = "Register a new user", description = "Creates a new STUDENT or EMPLOYER account and sends a verification email")
     @PostMapping("/register")
         public ResponseEntity<String> register(@Valid @RequestBody AuthDtos.RegisterRequest request){
-        if(request.role() == Role.ADMIN){
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request));
     }
 

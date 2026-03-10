@@ -9,6 +9,8 @@ import lombok.Data;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 
+import java.time.LocalDate;
+
 @Data
 
 public class AuthDtos {
@@ -35,12 +37,21 @@ public class AuthDtos {
             @NotBlank(message = "Phone number is required")
             String phoneNumber,
 
+            @NotBlank
+            String country,
+
             @NotBlank(message = "City is required")
             String city,
 
+            @NotNull(message = "Date of birth is required")
+            LocalDate dateOfBirth,
+
+            String university,
+            String major,
+            String bio,
             String github,
             String linkedin,
-            String university,
+
 
             String companyName,
             String website

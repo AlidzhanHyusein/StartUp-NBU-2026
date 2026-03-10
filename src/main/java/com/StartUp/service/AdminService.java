@@ -1,6 +1,7 @@
 package com.StartUp.service;
 
 import com.StartUp.dtos.admin.AdminDtos;
+import com.StartUp.dtos.user.UserDtos;
 import com.StartUp.entity.Category;
 import com.StartUp.entity.User;
 import com.StartUp.enums.Role;
@@ -38,11 +39,12 @@ public class AdminService {
 
         );
     }
-
     @Transactional(readOnly = true)
-    public Page<User> getAllUsers(Pageable pageable) {
-        return userRepository.findAll(pageable);
+    public Page<UserDtos.UserProfileResponse> getAllUsers(Pageable pageable) {
+        return userRepository.findAll(pageable)
+                .map(this::mapToResponse); // ← map each User to DTO
     }
+
 
     @Transactional(readOnly = true)
     public Page<User> getUsersByStatus(UserStatus status, Pageable pageable){
@@ -140,6 +142,20 @@ public class AdminService {
 
         categoryRepository.deleteById(id);
 
+    }
+
+
+    private UserDtos.UserProfileResponse mapToResponse(User user) {
+        return new UserDtos.UserProfileResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getRole(),
+                user.getStatus(),
+                user.getAvatarUrl(),
+                user.getCreatedAt()
+        );
     }
 
     private User getUser(Long id) {

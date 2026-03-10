@@ -145,6 +145,7 @@ public class JobService {
 
     private JobDtos.JobResponse mapToJobResponse(Job job) {
         EmployerProfile ep = job.getEmployer();
+
         JobDtos.EmployerSummary employerSummary = new JobDtos.EmployerSummary(ep.getUser().getFirstName(), ep.getUser().getLastName(), ep.getCompanyName(), ep.getUser().getEmail());
         return new JobDtos.JobResponse(
                 job.getId(),
