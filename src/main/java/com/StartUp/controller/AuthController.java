@@ -29,7 +29,7 @@ public class AuthController {
 
     @Operation(summary = "Register a new user", description = "Creates a new STUDENT or EMPLOYER account and sends a verification email")
     @PostMapping("/register")
-    public ResponseEntity<String> register(@Valid @RequestBody AuthDtos.RegisterRequest request){
+        public ResponseEntity<String> register(@Valid @RequestBody AuthDtos.RegisterRequest request){
         if(request.role() == Role.ADMIN){
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }

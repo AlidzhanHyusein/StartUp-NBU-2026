@@ -22,6 +22,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.UUID;
 
 @Slf4j
@@ -55,6 +58,8 @@ public class AuthService {
                 .lastName(request.lastName())
                 .role(request.role())
                 .enabled(false)
+                .phoneNumber(request.phoneNumber())
+                .city(request.city())
                 .status(UserStatus.PENDING)
                 .build();
 
@@ -65,7 +70,7 @@ public class AuthService {
 
         emailService.sendVerificationEmail(user.getEmail(), token);
 
-        createEmptyProfile(user);
+        createEmptyProfile(user,request);
 
         return "Registration successful! Please check your email to verify your account.";
     }
@@ -129,14 +134,25 @@ public class AuthService {
 
 
 
-    private void createEmptyProfile(User user){
-        if(user.getRole() == Role.STUDENT){
-            StudentProfile profile = StudentProfile.builder().user(user).build();
+    private void createEmptyProfile(User user, AuthDtos.RegisterRequest request){
+        if (user.getRole() == Role.STUDENT) {
+            StudentProfile profile = StudentProfile.builder()
+                    .user(user)
+                    .city(user.getCity())
+                    .createdAt(LocalDateTime.now())
+                    .phone(user.getPhoneNumber())
+                    .githubUrl(request.github())
+                    .linkedinUrl(request.linkedin())
+                    .university(request.university())
+                    .application(new ArrayList<>())
+                    .build();
             studentProfileRepository.save(profile);
-        } else if(user.getRole() == Role.EMPLOYER){
+
+        } else if (user.getRole() == Role.EMPLOYER) {
             EmployerProfile profile = EmployerProfile.builder()
                     .user(user)
-                    .companyName(user.getFirstName() + "'s Company")
+                    .companyName(request.companyName() != null ? request.companyName() : user.getFirstName() + "'s Company")
+                    .website(request.website())
                     .build();
             employerProfileRepository.save(profile);
         }
