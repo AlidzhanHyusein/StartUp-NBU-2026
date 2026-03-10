@@ -134,7 +134,7 @@ public class JobService {
         return new PageImpl<>(pageContent, pageable, filteredJobs.size());
     }
 
-    @Scheduled(cron = "0 35 15 * * *")
+    @Scheduled(cron = "0 59 23 * * *")
     @Transactional
     public void expireJobs() {
         jobRepository.expireJobs(LocalDate.now(), JobStatus.EXPIRED);
@@ -153,6 +153,7 @@ public class JobService {
                 job.getDuration(),
                 job.getSalary(),
                 job.getLocation(),
+                job.getStatus(),
                 job.getDescription(),
                 job.getStartDate(),
                 job.getEndDate()
