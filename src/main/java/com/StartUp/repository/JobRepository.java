@@ -9,6 +9,9 @@ import com.StartUp.enums.JobType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import org.springframework.data.domain.Pageable;
@@ -30,4 +33,8 @@ public interface JobRepository extends JpaRepository<Job, Long>, JpaSpecificatio
     List<Job> findAllByEmployerAndStatus(EmployerProfile employer, JobStatus jobStatus);
 
     List<Job> findByEndDateLessThanEqual(LocalDate date);
+
+    @Modifying
+    @Query("UPDATE Job j SET j.status = :status WHERE j.endDate <= :date AND j.status = 'OPEN'")
+    void expireJobs(@Param("date") LocalDate date, @Param("status") JobStatus status);
 }

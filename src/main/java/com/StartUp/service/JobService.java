@@ -134,13 +134,10 @@ public class JobService {
         return new PageImpl<>(pageContent, pageable, filteredJobs.size());
     }
 
-    @Scheduled(cron = "0 59 23 * * *")
+    @Scheduled(cron = "0 35 15 * * *")
     @Transactional
-    public void deleteExpiredJobs() {
-        List<Job> expiredJobs = jobRepository.findByEndDateLessThanEqual(LocalDate.now());
-        if (!expiredJobs.isEmpty()) {
-            jobRepository.deleteAll(expiredJobs);
-        }
+    public void expireJobs() {
+        jobRepository.expireJobs(LocalDate.now(), JobStatus.EXPIRED);
     }
 
     private JobDtos.JobResponse mapToJobResponse(Job job) {
