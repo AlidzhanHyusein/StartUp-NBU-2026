@@ -5,6 +5,7 @@ import com.StartUp.enums.ApplicationStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -14,6 +15,7 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
+    @Async
     public void sendVerificationEmail(String toEmail, String token) {
         String link = "http://localhost:8080/api/auth/verify?token=" + token;
 
@@ -25,6 +27,7 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    @Async
     public void sendApplicationStatusEmail(String email, ApplicationStatus status, Job job){
         String subject;
         String text;
