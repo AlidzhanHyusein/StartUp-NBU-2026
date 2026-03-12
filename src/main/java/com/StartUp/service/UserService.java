@@ -105,14 +105,6 @@ public class UserService {
         }
     }
 
-    private String getExtension(MultipartFile file) {
-        String originalFilename = file.getOriginalFilename();
-        if (originalFilename != null && originalFilename.contains(".")) {
-            return originalFilename.substring(originalFilename.lastIndexOf("."));
-        }
-        return ".jpg";
-    }
-
     private User findByEmail(String email){
         return userRepository.findByEmail(email).orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Потребителят не е намерен: " + email));
     }
