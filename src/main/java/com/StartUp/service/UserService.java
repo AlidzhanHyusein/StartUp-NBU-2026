@@ -4,6 +4,8 @@ import com.StartUp.dtos.user.UserDtos;
 import com.StartUp.entity.User;
 import com.StartUp.exception.AppExceptions;
 import com.StartUp.repository.UserRepository;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +17,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -23,6 +26,8 @@ import java.util.UUID;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final Cloudinary cloudinary;
+
 
     @Value("${app.upload.dir}")
     private String uploadDir;
@@ -60,7 +65,7 @@ public class UserService {
 
         User user = findByEmail(email);
 
-        String filename = "avatar_" +  user.getId() + "_"  + UUID.randomUUID() + getExtension(file);
+        String filename = "avatar_" +  user.getId() + "_"  + UUID.randomUUID();
 
         String url = saveFile(file,"avatars",filename);
 
@@ -71,15 +76,20 @@ public class UserService {
     }
 
 
-    private String saveFile(MultipartFile file, String subDir, String filename){
+    private String saveFile(MultipartFile file, String folder, String filename) {
         try {
-            Path dir = Paths.get(uploadDir,subDir);
-            Files.createDirectories(dir);
-            Path target = dir.resolve(filename);
-            Files.copy(file.getInputStream(),target);
-            return "/uploads/" + subDir + "/" + filename;
+            Map uploadResult = cloudinary.uploader().upload(
+                    file.getBytes(),
+                    ObjectUtils.asMap(
+                            "folder", folder,
+                            "public_id", filename,
+                            "overwrite", true,
+                            "resource_type", "auto"
+                    )
+            );
+            return uploadResult.get("secure_url").toString();
         } catch (IOException e) {
-            throw new AppExceptions.BadRequestException("Грешка при запис на файл: " + e.getMessage());
+            throw new RuntimeException("Failed to upload to Cloudinary: " + e.getMessage());
         }
     }
 
@@ -95,14 +105,12 @@ public class UserService {
         }
     }
 
-    private String getExtension(MultipartFile file){
-
-        String original = file.getOriginalFilename();
-
-        if(original == null || !original.contains(".")){
-            return ".jpg";
+    private String getExtension(MultipartFile file) {
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename != null && originalFilename.contains(".")) {
+            return originalFilename.substring(originalFilename.lastIndexOf("."));
         }
-        return original.substring(original.lastIndexOf("."));
+        return ".jpg";
     }
 
     private User findByEmail(String email){

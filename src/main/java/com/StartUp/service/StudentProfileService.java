@@ -7,6 +7,8 @@ import com.StartUp.enums.Role;
 import com.StartUp.exception.AppExceptions;
 import com.StartUp.repository.StudentProfileRepository;
 import com.StartUp.repository.UserRepository;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -17,11 +19,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
 public class StudentProfileService {
+
+    private final Cloudinary cloudinary;
 
     private final StudentProfileRepository studentProfileRepository;
     private final UserRepository userRepository;
@@ -100,17 +105,22 @@ public class StudentProfileService {
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Студентски профил не е намерен"));
     }
 
-    private String saveFile(MultipartFile file, String subDir, String filename) {
+    private String saveFile(MultipartFile file, String folder, String filename) {
         try {
-            Path dir = Paths.get(uploadDir, subDir);
-            Files.createDirectories(dir);
-            Files.copy(file.getInputStream(), dir.resolve(filename));
-            return "/uploads/" + subDir + "/" + filename;
+            Map uploadResult = cloudinary.uploader().upload(
+                    file.getBytes(),
+                    ObjectUtils.asMap(
+                            "folder", folder,
+                            "public_id", filename,
+                            "overwrite", true,
+                            "resource_type", "auto"
+                    )
+            );
+            return uploadResult.get("secure_url").toString();
         } catch (IOException e) {
-            throw new AppExceptions.BadRequestException("Грешка при запис на файл.");
+            throw new AppExceptions.BadRequestException("Грешка при качване на файл.");
         }
     }
-
 
 
     private String getExtension(MultipartFile file){
