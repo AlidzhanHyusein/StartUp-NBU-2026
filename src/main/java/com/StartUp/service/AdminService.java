@@ -42,7 +42,7 @@ public class AdminService {
     @Transactional(readOnly = true)
     public Page<UserDtos.UserProfileResponse> getAllUsers(Pageable pageable) {
         return userRepository.findAll(pageable)
-                .map(this::mapToResponse); // ← map each User to DTO
+                .map(this::mapToResponse);
     }
 
 

@@ -29,9 +29,6 @@ public class UserService {
     private final Cloudinary cloudinary;
 
 
-    @Value("${app.upload.dir}")
-    private String uploadDir;
-
     @Transactional(readOnly = true)
     public UserDtos.UserProfileResponse getProfile(String email){
 
@@ -103,14 +100,6 @@ public class UserService {
         if(contentType == null || !contentType.startsWith("image/")){
             throw new AppExceptions.BadRequestException("Само изображения са позволени.");
         }
-    }
-
-    private String getExtension(MultipartFile file) {
-        String originalFilename = file.getOriginalFilename();
-        if (originalFilename != null && originalFilename.contains(".")) {
-            return originalFilename.substring(originalFilename.lastIndexOf("."));
-        }
-        return ".jpg";
     }
 
     private User findByEmail(String email){

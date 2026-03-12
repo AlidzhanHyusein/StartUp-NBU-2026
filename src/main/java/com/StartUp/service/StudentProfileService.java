@@ -10,15 +10,12 @@ import com.StartUp.repository.UserRepository;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+
 import java.util.Map;
 import java.util.UUID;
 
@@ -31,8 +28,6 @@ public class StudentProfileService {
     private final StudentProfileRepository studentProfileRepository;
     private final UserRepository userRepository;
 
-    @Value("${app.upload.dir}")
-    private String uploadDir;
 
     @Transactional(readOnly = true)
     public StudentDtos.StudentProfileResponse getMyProfile(String email){
@@ -83,7 +78,7 @@ public class StudentProfileService {
         User user = getUser(email);
         StudentProfile profile = getProfile(user.getId());
 
-        String filename = "cv_" + user.getId() + "_" + UUID.randomUUID() + getExtension(file);
+        String filename = "cv_" + user.getId() + "_" + UUID.randomUUID();
         String url = saveFile(file, "cv", filename);
 
         profile.setCvUrl(url);
@@ -120,17 +115,6 @@ public class StudentProfileService {
         } catch (IOException e) {
             throw new AppExceptions.BadRequestException("Грешка при качване на файл.");
         }
-    }
-
-
-    private String getExtension(MultipartFile file){
-        String original = file.getOriginalFilename();
-
-        if(original == null || !original.contains(".")){
-            return ".pdf";
-        }
-
-        return original.substring(original.lastIndexOf("."));
     }
 
     private StudentDtos.StudentProfileResponse mapToResponse(StudentProfile p) {
