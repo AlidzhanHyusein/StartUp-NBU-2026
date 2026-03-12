@@ -29,9 +29,6 @@ public class UserService {
     private final Cloudinary cloudinary;
 
 
-    @Value("${app.upload.dir}")
-    private String uploadDir;
-
     @Transactional(readOnly = true)
     public UserDtos.UserProfileResponse getProfile(String email){
 

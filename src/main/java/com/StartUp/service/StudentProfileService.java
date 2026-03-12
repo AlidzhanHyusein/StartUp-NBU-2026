@@ -10,15 +10,12 @@ import com.StartUp.repository.UserRepository;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+
 import java.util.Map;
 import java.util.UUID;
 
@@ -31,8 +28,6 @@ public class StudentProfileService {
     private final StudentProfileRepository studentProfileRepository;
     private final UserRepository userRepository;
 
-    @Value("${app.upload.dir}")
-    private String uploadDir;
 
     @Transactional(readOnly = true)
     public StudentDtos.StudentProfileResponse getMyProfile(String email){
