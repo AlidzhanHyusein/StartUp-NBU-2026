@@ -9,7 +9,6 @@ import com.mailgun.model.message.Message;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Value;
-
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +33,7 @@ public class EmailService {
                 .createApi(MailgunMessagesApi.class);
 
         Message message = Message.builder()
-                .from("noreply@" + domain)
+                .from("Breaddy <noreply@mail.breaddy.store>")
                 .to(toEmail)
                 .subject("Verify your email")
                 .text("Click to verify your account: " + link)
@@ -72,7 +71,7 @@ public class EmailService {
                 .createApi(MailgunMessagesApi.class);
 
         Message message = Message.builder()
-                .from("noreply@" + domain)
+                .from("Breaddy <noreply@mail.breaddy.store>")
                 .to(email)
                 .subject(subject)
                 .text(text)
