@@ -35,9 +35,9 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final JwtAuthFilter jwtAuthFilter;
 
-    @Value("${CLIENT_ONE}")
+    @Value("${app.cors.client-one}")
     private String clientOne;
-    @Value("${CLIENT_TWO}")
+    @Value("${app.cors.client-two}")
     private String clientTwo;
 
 
