@@ -2,7 +2,6 @@ services:
   db:
     image: postgres:16
     container_name: startup_db
-    restart: always
     environment:
       POSTGRES_DB: startup
       POSTGRES_USER: ${DB_USERNAME}
@@ -38,9 +37,11 @@ services:
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
-      MAIL_USERNAME: ${MAIL_USERNAME}
-      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAILGUN_API_KEY: ${MAILGUN_API_KEY}
+      MAILGUN_DOMAIN: ${MAILGUN_DOMAIN}
       BASE_URL: ${BASE_URL}
+      CLIENT_ONE: ${CLIENT_ONE}
+      CLIENT_TWO: ${CLIENT_TWO}
 
 volumes:
   postgres_data:
