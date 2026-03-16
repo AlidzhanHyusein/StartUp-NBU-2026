@@ -46,7 +46,7 @@ public class AuthController {
 
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(URI.create("https://startup-nbu-2026-client.vercel.app/auth/login?verified=true"));
+        headers.setLocation(URI.create("https://breaddy.store/auth/login?verified=true"));
         return new ResponseEntity<>(headers, HttpStatus.FOUND);
     }
 
