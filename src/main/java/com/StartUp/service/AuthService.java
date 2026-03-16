@@ -91,13 +91,18 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthDtos.AuthResponse login (AuthDtos.LoginRequest request){
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.email(),request.password()));
+    public AuthDtos.AuthResponse login(AuthDtos.LoginRequest request) {
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.email(), request.password()));
 
-        User user = userRepository.findByEmail(request.email()).orElseThrow(() -> new AppExceptions.InvalidTokenException("Потребителят не е намерен"));
+        User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> new AppExceptions.InvalidTokenException("Потребителят не е намерен"));
 
-        if(user.getStatus() == UserStatus.BLOCKED){
+        if (user.getStatus() == UserStatus.BLOCKED) {
             throw new AppExceptions.AccountBlockedException();
+        }
+
+        if (!user.isEnabled()) {
+            throw new AppExceptions.BadRequestException("Трябва да си верифицирате акаунта");
         }
 
         return buildTokenResponse(user);

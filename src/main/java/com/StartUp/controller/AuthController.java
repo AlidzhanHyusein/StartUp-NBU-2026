@@ -7,9 +7,11 @@ import com.StartUp.repository.UserRepository;
 import com.StartUp.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.net.URI;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -41,7 +43,11 @@ public class AuthController {
         user.setStatus(UserStatus.ACTIVE);
         user.setVerificationToken(null);
         userRepository.save(user);
-        return ResponseEntity.ok("Email verified! You can now log in.");
+
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(URI.create("https://startup-nbu-2026-client.vercel.app/auth/login?verified=true"));
+        return new ResponseEntity<>(headers, HttpStatus.FOUND);
     }
 
     @Operation(summary = "Login", description = "Authenticates a verified user and returns an access token and refresh token")
