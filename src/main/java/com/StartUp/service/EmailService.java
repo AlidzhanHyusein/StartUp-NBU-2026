@@ -3,11 +3,13 @@ package com.StartUp.service;
 import com.StartUp.entity.Job;
 import com.StartUp.enums.ApplicationStatus;
 
+import com.mailgun.api.v3.MailgunMessagesApi;
+import com.mailgun.client.MailgunClient;
+import com.mailgun.model.message.Message;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +17,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class EmailService {
 
-    private final JavaMailSender mailSender;
+    @Value("${mailgun.api-key}")
+    private String apiKey;
+
+    @Value("${mailgun.domain}")
+    private String domain;
 
     @Value("${app.base-url}")
     private String baseUrl;
@@ -24,11 +30,17 @@ public class EmailService {
     public void sendVerificationEmail(String toEmail, String token) {
         String link = baseUrl + "/api/auth/verify?token=" + token;
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(toEmail);
-        message.setSubject("Verify your email");
-        message.setText("Click to verify your account: " + link);
-        mailSender.send(message);
+        MailgunMessagesApi mailgunMessagesApi = MailgunClient.config(apiKey)
+                .createApi(MailgunMessagesApi.class);
+
+        Message message = Message.builder()
+                .from("noreply@" + domain)
+                .to(toEmail)
+                .subject("Verify your email")
+                .text("Click to verify your account: " + link)
+                .build();
+
+        mailgunMessagesApi.sendMessage(domain, message);
     }
 
     @Async
@@ -39,27 +51,33 @@ public class EmailService {
         if (status == ApplicationStatus.ACCEPTED) {
             subject = "Congratulations! Your application was accepted 🎉";
             text = String.format(
-                    "Great news! Your application for the position '%s' at '%s' has been accepted.\nThe employer will contact you soon.",
+                    "Great news! Your application for '%s' at '%s' has been accepted.\nThe employer will contact you soon.",
                     job.getTitle(), job.getEmployer().getCompanyName()
             );
         } else if (status == ApplicationStatus.REJECTED) {
             subject = "Your application was not successful";
             text = String.format(
-                    "Unfortunately your application for the position '%s' at '%s' has been rejected.\nKeep applying and good luck!",
+                    "Unfortunately your application for '%s' at '%s' has been rejected.\nKeep applying and good luck!",
                     job.getTitle(), job.getEmployer().getCompanyName()
             );
         } else {
             subject = "Your application status has changed";
             text = String.format(
-                    "Your application for the position '%s' at '%s' has been updated to: %s",
+                    "Your application for '%s' at '%s' has been updated to: %s",
                     job.getTitle(), job.getEmployer().getCompanyName(), status
             );
         }
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(email);
-        message.setSubject(subject);
-        message.setText(text);
-        mailSender.send(message);
+        MailgunMessagesApi mailgunMessagesApi = MailgunClient.config(apiKey)
+                .createApi(MailgunMessagesApi.class);
+
+        Message message = Message.builder()
+                .from("noreply@" + domain)
+                .to(email)
+                .subject(subject)
+                .text(text)
+                .build();
+
+        mailgunMessagesApi.sendMessage(domain, message);
     }
 }
