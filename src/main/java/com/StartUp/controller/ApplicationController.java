@@ -26,7 +26,7 @@ public class ApplicationController {
         this.applicationService = applicationService;
     }
 
-    @Operation(summary = "Add application", description = "Adds a job application")
+    @Operation(summary = "Apply ", description = "Adds a job application")
     @PostMapping("/{jobId}")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApplicationDtos.ApplicationResponse> applyToJob(@PathVariable Long jobId,
