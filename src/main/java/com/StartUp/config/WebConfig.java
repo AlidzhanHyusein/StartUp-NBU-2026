@@ -10,13 +10,16 @@ import java.util.List;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    @Value("${app.cors.allowed-origins}")
-    private List<String> allowedOrigins;
+    @Value("${app.cors.client-one}")
+    private String clientOne;
+
+    @Value("${app.cors.client-two}")
+    private String clientTwo;
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOrigins(allowedOrigins.toArray(String[]::new))
+                .allowedOrigins(clientOne, clientTwo)
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .exposedHeaders("Authorization")
