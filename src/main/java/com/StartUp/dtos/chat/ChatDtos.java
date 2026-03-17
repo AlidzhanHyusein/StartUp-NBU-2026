@@ -1,5 +1,6 @@
 package com.StartUp.dtos.chat;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class ChatDtos {
@@ -10,11 +11,18 @@ public class ChatDtos {
     ) {}
 
     public record MessageHistory(
-            String role,  // "user" or "model"
+            String role,
             String content
     ) {}
 
     public record ChatResponse(
             String reply
+    ) {}
+
+    public record ChatHistoryResponse(
+            Long id,
+            String role,
+            String content,
+            LocalDateTime createdAt
     ) {}
 }

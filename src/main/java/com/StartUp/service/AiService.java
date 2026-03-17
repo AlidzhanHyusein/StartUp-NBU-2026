@@ -1,6 +1,11 @@
 package com.StartUp.service;
 
 import com.StartUp.dtos.chat.ChatDtos;
+import com.StartUp.entity.ChatMessage;
+import com.StartUp.entity.User;
+import com.StartUp.exception.AppExceptions;
+import com.StartUp.repository.ChatMessageRepository;
+import com.StartUp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -16,6 +21,9 @@ public class AiService {
 
     @Value("${gemini.api-key}")
     private String apiKey;
+
+    private final ChatMessageRepository chatMessageRepository;
+    private final UserRepository userRepository;
 
     private final WebClient webClient = WebClient.builder()
             .baseUrl("https://generativelanguage.googleapis.com")
@@ -44,31 +52,24 @@ public class AiService {
             Always respond in the same language the user is writing in.
             """;
 
-    public ChatDtos.ChatResponse chat(ChatDtos.ChatRequest request) {
+    public ChatDtos.ChatResponse chat(String email, ChatDtos.ChatRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("User not found"));
+
         List<Map<String, Object>> contents = new ArrayList<>();
 
-        contents.add(Map.of(
-                "role", "user",
-                "parts", List.of(Map.of("text", SYSTEM_PROMPT))
-        ));
-        contents.add(Map.of(
-                "role", "model",
-                "parts", List.of(Map.of("text", "Understood! I am the Breaddy assistant. How can I help you?"))
-        ));
+        contents.add(Map.of("role", "user", "parts", List.of(Map.of("text", SYSTEM_PROMPT))));
+        contents.add(Map.of("role", "model", "parts", List.of(Map.of("text", "Understood! I am the Breaddy assistant. How can I help you?"))));
 
-        if (request.history() != null) {
-            for (ChatDtos.MessageHistory msg : request.history()) {
-                contents.add(Map.of(
-                        "role", msg.role(),
-                        "parts", List.of(Map.of("text", msg.content()))
-                ));
-            }
+        List<ChatMessage> dbHistory = chatMessageRepository.findByUserIdOrderByCreatedAtAsc(user.getId());
+        for (ChatMessage msg : dbHistory) {
+            contents.add(Map.of(
+                    "role", msg.getRole(),
+                    "parts", List.of(Map.of("text", msg.getContent()))
+            ));
         }
 
-        contents.add(Map.of(
-                "role", "user",
-                "parts", List.of(Map.of("text", request.message()))
-        ));
+        contents.add(Map.of("role", "user", "parts", List.of(Map.of("text", request.message()))));
 
         Map<String, Object> body = Map.of("contents", contents);
 
@@ -84,6 +85,39 @@ public class AiService {
         List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
         String reply = (String) parts.get(0).get("text");
 
+        chatMessageRepository.save(ChatMessage.builder()
+                .user(user)
+                .role("user")
+                .content(request.message())
+                .build());
+
+        chatMessageRepository.save(ChatMessage.builder()
+                .user(user)
+                .role("model")
+                .content(reply)
+                .build());
+
         return new ChatDtos.ChatResponse(reply);
+    }
+
+    public List<ChatDtos.ChatHistoryResponse> getHistory(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("User not found"));
+
+        return chatMessageRepository.findByUserIdOrderByCreatedAtAsc(user.getId())
+                .stream()
+                .map(msg -> new ChatDtos.ChatHistoryResponse(
+                        msg.getId(),
+                        msg.getRole(),
+                        msg.getContent(),
+                        msg.getCreatedAt()
+                ))
+                .toList();
+    }
+
+    public void clearHistory(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("User not found"));
+        chatMessageRepository.deleteByUserId(user.getId());
     }
 }
