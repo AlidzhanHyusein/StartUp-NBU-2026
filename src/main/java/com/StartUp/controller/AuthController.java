@@ -46,6 +46,7 @@ public class AuthController {
 
 
         HttpHeaders headers = new HttpHeaders();
+        headers.set("Verify Now", "https://breaddy.store/auth/login?verified=true");
         headers.setLocation(URI.create("https://breaddy.store/auth/login?verified=true"));
         return new ResponseEntity<>(headers, HttpStatus.FOUND);
     }
