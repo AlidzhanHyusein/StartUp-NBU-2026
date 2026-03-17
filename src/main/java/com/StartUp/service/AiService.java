@@ -73,7 +73,7 @@ public class AiService {
         Map<String, Object> body = Map.of("contents", contents);
 
         Map response = webClient.post()
-                .uri("/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey)
+                .uri("/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey)
                 .bodyValue(body)
                 .retrieve()
                 .bodyToMono(Map.class)
