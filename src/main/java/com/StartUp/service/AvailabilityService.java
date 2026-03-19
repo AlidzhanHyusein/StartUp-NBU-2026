@@ -26,7 +26,6 @@ public class AvailabilityService {
     private final StudentProfileRepository  studentProfileRepository;
     private final UserRepository            userRepository;
 
-    // ── helpers ───────────────────────────────────────────────────────────────
 
     private String currentEmail() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
@@ -37,21 +36,16 @@ public class AvailabilityService {
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Student profile not found"));
     }
 
-    /**
-     * Availability.student is a User.
-     * This helper looks up the StudentProfile by userId so we can get city/university.
-     */
     private StudentProfile profileForUser(User user) {
         return studentProfileRepository.findByUserId(user.getId()).orElse(null);
     }
 
-    // ── Student CRUD ──────────────────────────────────────────────────────────
 
     @Transactional
     public AvailabilityDtos.AvailabilityResponse create(AvailabilityDtos.AvailabilityRequest request) {
         StudentProfile student = currentStudent();
         Availability slot = Availability.builder()
-                .student(student.getUser())          // Availability.student is a User
+                .student(student.getUser())
                 .date(request.date())
                 .startTime(request.startTime())
                 .endTime(request.endTime())
@@ -67,7 +61,7 @@ public class AvailabilityService {
         StudentProfile student = currentStudent();
         List<Availability> slots = requests.stream()
                 .map(r -> Availability.builder()
-                        .student(student.getUser())  // Availability.student is a User
+                        .student(student.getUser())
                         .date(r.date())
                         .startTime(r.startTime())
                         .endTime(r.endTime())
@@ -83,7 +77,6 @@ public class AvailabilityService {
     @Transactional(readOnly = true)
     public List<AvailabilityDtos.AvailabilityResponse> getMy() {
         StudentProfile student = currentStudent();
-        // Availability.student is a User → use the User's ID, NOT the StudentProfile ID
         return availabilityRepository
                 .findByStudent_IdOrderByDateAscStartTimeAsc(student.getUser().getId())
                 .stream()
@@ -97,7 +90,6 @@ public class AvailabilityService {
         Availability slot = availabilityRepository.findById(id)
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Availability slot not found"));
         StudentProfile student = currentStudent();
-        // slot.getStudent() is a User — compare user IDs
         if (!slot.getStudent().getId().equals(student.getUser().getId())) {
             throw new AppExceptions.UnauthorizedException("You do not own this slot");
         }
@@ -114,19 +106,13 @@ public class AvailabilityService {
         Availability slot = availabilityRepository.findById(id)
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Availability slot not found"));
         StudentProfile student = currentStudent();
-        // slot.getStudent() is a User — compare user IDs
         if (!slot.getStudent().getId().equals(student.getUser().getId())) {
             throw new AppExceptions.UnauthorizedException("You do not own this slot");
         }
         availabilityRepository.delete(slot);
     }
 
-    // ── Employer: single student ──────────────────────────────────────────────
 
-    /**
-     * studentProfileId comes from the employer's application response.
-     * We look up the User behind that StudentProfile, then query availability by userId.
-     */
     @Transactional(readOnly = true)
     public List<AvailabilityDtos.AvailabilityResponse> getByStudent(Long studentProfileId) {
         StudentProfile sp = studentProfileRepository.findById(studentProfileId)
@@ -160,7 +146,6 @@ public class AvailabilityService {
                 .toList();
     }
 
-    // ── Employer: heatmap ─────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
     public HeatmapDtos.HeatmapResponse getHeatmap(String city) {
@@ -176,7 +161,6 @@ public class AvailabilityService {
             return new HeatmapDtos.HeatmapResponse(List.of(), 0L, 0, 9, city);
         }
 
-        // grid[dayOfWeek 0-6][hour 0-23] → map of userId → StudentSummary
         @SuppressWarnings("unchecked")
         Map<Long, HeatmapDtos.StudentSummary>[][] grid = new HashMap[7][24];
         for (int d = 0; d < 7; d++)
@@ -184,16 +168,14 @@ public class AvailabilityService {
                 grid[d][h] = new LinkedHashMap<>();
 
         for (Availability slot : slots) {
-            int dow       = slot.getDate().getDayOfWeek().getValue() - 1; // Mon=0 … Sun=6
+            int dow       = slot.getDate().getDayOfWeek().getValue() - 1;
             int startHour = slot.getStartTime().getHour();
             int endHour   = slot.getEndTime().getHour();
             if (slot.getEndTime().getMinute() == 0 && endHour > startHour) endHour--;
 
-            // slot.getStudent() is a User — this is correct
             User user   = slot.getStudent();
             long userId = user.getId();
 
-            // Look up StudentProfile via the User to get city/university
             StudentProfile sp = profileForUser(user);
 
             HeatmapDtos.StudentSummary summary = new HeatmapDtos.StudentSummary(
@@ -209,7 +191,6 @@ public class AvailabilityService {
             }
         }
 
-        // Build cell list + find peaks
         List<HeatmapDtos.HeatmapCell> cells = new ArrayList<>();
         long[] dayTotals = new long[7];
         int peakDay = 0, peakHour = 0;
@@ -237,7 +218,6 @@ public class AvailabilityService {
         return new HeatmapDtos.HeatmapResponse(cells, totalStudents, peakDayByTotal, peakHour, city);
     }
 
-    // ── Mapper ────────────────────────────────────────────────────────────────
 
     private AvailabilityDtos.AvailabilityResponse mapToResponse(Availability a) {
         return new AvailabilityDtos.AvailabilityResponse(
