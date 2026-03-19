@@ -31,4 +31,16 @@ public interface ApplicationRepository extends JpaRepository<Application,Long> {
 
     Page<Application> findAllByStudent_IdAndStatus(Long studentId, ApplicationStatus status, Pageable pageable);
     Page<Application> findAllByStudent_Id(Long studentId, Pageable pageable);
+
+    @Query("""
+    SELECT a FROM Application a
+    JOIN FETCH a.student sp
+    JOIN FETCH sp.user
+    JOIN FETCH a.job j
+    LEFT JOIN FETCH j.employer e
+    LEFT JOIN FETCH e.user
+    WHERE a.id = :id
+    """)
+    Optional<Application> findByIdWithDetails(@Param("id") Long id);
 }
+

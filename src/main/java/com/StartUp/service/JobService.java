@@ -49,6 +49,7 @@ public class JobService {
         job.setDescription(jobRequest.description());
         job.setStartDate(jobRequest.startDate());
         job.setEndDate(jobRequest.endDate());
+        job.setGroupSize(jobRequest.groupSize());
         job.setStatus(JobStatus.OPEN);
         job.onCreate();
 
@@ -146,8 +147,10 @@ public class JobService {
         JobDtos.EmployerSummary employerSummary = new JobDtos.EmployerSummary(ep.getUser().getFirstName(), ep.getUser().getLastName(), ep.getCompanyName(), ep.getUser().getEmail());
         return new JobDtos.JobResponse(
                 job.getId(),
+                job.getEmployer().getUser().getId(),
                 employerSummary,
                 job.getTitle(),
+                job.getGroupSize(),
                 job.getCategory(),
                 job.getType(),
                 job.getDuration(),

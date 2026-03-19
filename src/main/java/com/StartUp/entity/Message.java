@@ -1,5 +1,6 @@
 package com.StartUp.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,10 +22,12 @@ public class Message {
 
     @ManyToOne
     @JoinColumn(name = "conversation_id", nullable = false)
+    @JsonIgnoreProperties({"messages", "user1", "user2"})
     private Conversation conversation;
 
     @ManyToOne
     @JoinColumn(name = "sender_id", nullable = false)
+    @JsonIgnoreProperties({"password", "refreshToken", "verificationToken", "studentProfile", "employerProfile"})
     private User sender;
 
     @Column(columnDefinition = "TEXT", nullable = false)

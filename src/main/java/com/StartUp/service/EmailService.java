@@ -52,6 +52,34 @@ public class EmailService {
     }
 
     @Async
+    public void sendReferralInviteEmail(String toEmail, String referrerName, String referralCode, String baseUrl) {
+        String registerLink = baseUrl.replace("api.", "") + "/auth-register?ref=" + referralCode;
+
+        MailgunMessagesApi mailgunMessagesApi = MailgunClient.config(apiKey)
+                .createApi(MailgunMessagesApi.class);
+
+        String htmlContent = "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>"
+                + "<h2 style='color: #4caf85;'>You've been invited to Breaddy! 🎉</h2>"
+                + "<p><strong>" + referrerName + "</strong> thinks you'd love Breaddy — the platform connecting students with flexible part-time jobs.</p>"
+                + "<p>Sign up using the link below and get started. Once you complete your first shift, your friend earns a bonus!</p>"
+                + "<a href='" + registerLink + "' style='background-color: #4caf85; color: white; padding: 12px 24px; "
+                + "text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; margin: 16px 0;'>"
+                + "Join Breaddy Now</a>"
+                + "<p style='color: #888; font-size: 0.85rem;'>Or copy this link: " + registerLink + "</p>"
+                + "<p style='color: #666;'>If you did not expect this email, please ignore it.</p>"
+                + "</div>";
+
+        Message message = Message.builder()
+                .from("Breaddy <noreply@mail.breaddy.store>")
+                .to(toEmail)
+                .subject(referrerName + " invited you to join Breaddy 🎉")
+                .html(htmlContent)
+                .build();
+
+        mailgunMessagesApi.sendMessage(domain, message);
+    }
+
+    @Async
     public void sendApplicationStatusEmail(String email, ApplicationStatus status, Job job) {
         String subject;
         String text;
@@ -76,6 +104,10 @@ public class EmailService {
             );
         }
 
+
+
+
+
         MailgunMessagesApi mailgunMessagesApi = MailgunClient.config(apiKey)
                 .createApi(MailgunMessagesApi.class);
 
@@ -84,6 +116,63 @@ public class EmailService {
                 .to(email)
                 .subject(subject)
                 .text(text)
+                .build();
+
+        mailgunMessagesApi.sendMessage(domain, message);
+    }
+
+    @Async
+    public void sendGroupBookingAccepted(String toEmail, String firstName,
+                                         String jobTitle, String companyName) {
+        MailgunMessagesApi mailgunMessagesApi = MailgunClient.config(apiKey)
+                .createApi(MailgunMessagesApi.class);
+
+        String htmlContent = "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>"
+                + "<h2 style='color: #4caf85;'>Your group booking was accepted! 🎉</h2>"
+                + "<p>Hi <strong>" + firstName + "</strong>,</p>"
+                + "<p>Great news! Your group application for <strong>" + jobTitle + "</strong> "
+                + "at <strong>" + companyName + "</strong> has been <strong style='color:#4caf85;'>accepted</strong> by the employer.</p>"
+                + "<p>You can now coordinate with your group and message the employer directly through the app.</p>"
+                + "<a href='" + baseUrl + "' style='background-color: #4caf85; color: white; padding: 12px 24px; "
+                + "text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; margin: 16px 0;'>"
+                + "View on Breaddy</a>"
+                + "<p style='color: #666;'>Good luck with your shift!</p>"
+                + "<p style='color: #888; font-size: 0.85rem;'>The Breaddy Team</p>"
+                + "</div>";
+
+        Message message = Message.builder()
+                .from("Breaddy <noreply@mail.breaddy.store>")
+                .to(toEmail)
+                .subject("🎉 Group booking accepted — " + jobTitle)
+                .html(htmlContent)
+                .build();
+
+        mailgunMessagesApi.sendMessage(domain, message);
+    }
+
+    @Async
+    public void sendGroupBookingRejected(String toEmail, String firstName,
+                                         String jobTitle, String companyName) {
+        MailgunMessagesApi mailgunMessagesApi = MailgunClient.config(apiKey)
+                .createApi(MailgunMessagesApi.class);
+
+        String htmlContent = "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>"
+                + "<h2 style='color: #e05561;'>Group booking update</h2>"
+                + "<p>Hi <strong>" + firstName + "</strong>,</p>"
+                + "<p>Unfortunately your group application for <strong>" + jobTitle + "</strong> "
+                + "at <strong>" + companyName + "</strong> was not accepted this time.</p>"
+                + "<p>Don't give up — there are plenty of other opportunities waiting for you on Breaddy!</p>"
+                + "<a href='" + baseUrl + "' style='background-color: #4caf85; color: white; padding: 12px 24px; "
+                + "text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; margin: 16px 0;'>"
+                + "Browse Jobs</a>"
+                + "<p style='color: #888; font-size: 0.85rem;'>The Breaddy Team</p>"
+                + "</div>";
+
+        Message message = Message.builder()
+                .from("Breaddy <noreply@mail.breaddy.store>")
+                .to(toEmail)
+                .subject("Group booking update — " + jobTitle)
+                .html(htmlContent)
                 .build();
 
         mailgunMessagesApi.sendMessage(domain, message);

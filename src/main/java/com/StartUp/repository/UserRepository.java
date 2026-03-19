@@ -15,4 +15,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Long countByStatus(UserStatus status);
     Page<User> findByStatus(UserStatus status, Pageable pageable);
     Optional<User> findByVerificationToken(String token);
+    Optional<User> findByStripeAccountId(String stripeAccountId);
 }

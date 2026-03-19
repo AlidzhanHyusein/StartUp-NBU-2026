@@ -1,9 +1,14 @@
 package com.StartUp.controller;
 
 import com.StartUp.entity.Notification;
+import com.StartUp.entity.User;
+import com.StartUp.repository.UserRepository;
 import com.StartUp.service.NotificationService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
@@ -11,27 +16,37 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/notifications")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class NotificationController {
 
     private final NotificationService notificationService;
+    private final UserRepository userRepository;
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Notification>> getUserNotifications(@PathVariable Long userId) {
-        List<Notification> notifications = notificationService.getUserNotifications(userId);
-        return ResponseEntity.ok(notifications);
+    @GetMapping("/my")
+    public ResponseEntity<List<Notification>> getMyNotifications(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        return ResponseEntity.ok(notificationService.getUserNotifications(user.getId()));
+    }
+    @Operation(summary = "Mark all my notifications as read")
+    @PutMapping("/my/read-all")
+    public ResponseEntity<Void> markAllMyRead(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        notificationService.markAllReadByEmail(userDetails.getUsername());
+        return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/user/{userId}/unread")
-    public ResponseEntity<List<Notification>> getUnreadNotifications(@PathVariable Long userId) {
-        List<Notification> notifications = notificationService.getUnreadNotifications(userId);
-        return ResponseEntity.ok(notifications);
+    @GetMapping("/my/unread")
+    public ResponseEntity<List<Notification>> getMyUnreadNotifications(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        return ResponseEntity.ok(notificationService.getUnreadNotifications(user.getId()));
     }
 
-    @GetMapping("/user/{userId}/unread/count")
-    public ResponseEntity<Map<String, Long>> getUnreadCount(@PathVariable Long userId) {
-        Long count = notificationService.getUnreadCount(userId);
-        return ResponseEntity.ok(Map.of("count", count));
+    @GetMapping("/my/unread/count")
+    public ResponseEntity<Map<String, Long>> getMyUnreadCount(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        return ResponseEntity.ok(Map.of("count", notificationService.getUnreadCount(user.getId())));
     }
 
     @GetMapping("/{id}")

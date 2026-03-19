@@ -39,6 +39,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
     private final EmailService emailService;
+    private final ReferralService referralService;
 
     @Transactional
     public String register (AuthDtos.RegisterRequest request){
@@ -82,6 +83,11 @@ public class AuthService {
         user.setVerificationToken(token);
 
         user = userRepository.save(user);
+
+        String refCode = request.referralCode();
+        if (refCode != null && !refCode.isBlank()) {
+            referralService.handleRegistrationWithCode(refCode, user);
+        }
 
         emailService.sendVerificationEmail(user.getEmail(), token);
 

@@ -15,177 +15,153 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
 public class ApplicationService {
 
-    private final ApplicationRepository applicationRepository;
-    private final JobRepository jobRepository;
+    private final ApplicationRepository  applicationRepository;
+    private final JobRepository          jobRepository;
     private final StudentProfileRepository studentProfileRepository;
     private final EmployerProfileRepository employerProfileRepository;
-    private final MessageService messageService;
-    private final EmailService emailService;
+    private final MessageService         messageService;
+    private final EmailService           emailService;
+
+    private String currentEmail() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
+    }
+
 
     @Transactional(readOnly = true)
-    public Page<ApplicationDtos.ApplicationResponse> findAllByStatus(ApplicationStatus status, Pageable pageable){
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-
+    public Page<ApplicationDtos.ApplicationResponse> findAllByStatus(
+            ApplicationStatus status, Pageable pageable) {
+        String email = currentEmail();
         StudentProfile student = studentProfileRepository.findByUser_Email(email)
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Student profile not found"));
 
         if (status != null) {
-            return applicationRepository.findAllByStudent_IdAndStatus(student.getId(), status, pageable)
+            return applicationRepository
+                    .findAllByStudent_IdAndStatus(student.getId(), status, pageable)
                     .map(this::mapToResponse);
         }
-
-        return applicationRepository.findAllByStudent_Id(student.getId(), pageable)
+        return applicationRepository
+                .findAllByStudent_Id(student.getId(), pageable)
                 .map(this::mapToResponse);
     }
 
-    @Transactional()
-    public ApplicationDtos.ApplicationResponse appliedToJob(Long jobId, ApplicationDtos.ApplicationRequest request) {
 
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        StudentProfile studentProfile = studentProfileRepository.findByUser_Email(email)
+    @Transactional
+    public ApplicationDtos.ApplicationResponse appliedToJob(
+            Long jobId, ApplicationDtos.ApplicationRequest request) {
+        String email = currentEmail();
+        StudentProfile student = studentProfileRepository.findByUser_Email(email)
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Student profile not found"));
 
-        Job job = findJobById(jobId);
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Job not found"));
 
-        boolean alreadyApplied = applicationRepository.existsByStudentAndJob(studentProfile, job);
-        if (alreadyApplied) {
-            throw new AppExceptions.BadRequestException("Student has already applied to this job");
+        if (applicationRepository.existsByStudentAndJob(student, job)) {
+            throw new AppExceptions.BadRequestException("Already applied to this job");
         }
 
-        Application newApplication = Application.builder()
-                .student(studentProfile)
+        String firstName = nvl(student.getUser().getFirstName(), nvl(request.firstName(), ""));
+        String lastName  = nvl(student.getUser().getLastName(),
+                nvl(request.lastName(),  ""));
+        String userEmail = nvl(student.getUser().getEmail(),
+                nvl(request.email(),     ""));
+        String phone     = nvl(student.getPhone(),
+                nvl(request.phoneNumber(), ""));
+        String city      = nvl(student.getCity(),
+                nvl(request.city(),       ""));
+
+        Application application = Application.builder()
+                .student(student)
                 .job(job)
-                .firstName(studentProfile.getUser().getFirstName())
-                .lastName(studentProfile.getUser().getLastName())
-                .email(studentProfile.getUser().getEmail())
-                .phoneNumber(studentProfile.getPhone())
-                .city(studentProfile.getCity())
+                .firstName(firstName)
+                .lastName(lastName)
+                .email(userEmail)
+                .phoneNumber(phone)
+                .city(city)
                 .resumeUrl(request.resumeUrl())
                 .messageToCompany(request.messageToCompany())
                 .status(ApplicationStatus.PENDING)
-                .appliedAt(LocalDateTime.now())
                 .build();
 
-        studentProfile.getApplication().add(newApplication);
-        job.getApplication().add(newApplication);
+        Application saved = applicationRepository.save(application);
+        return mapToResponse(
+                applicationRepository.findByIdWithDetails(saved.getId()).orElse(saved)
+        );
+    }
 
-        return mapToResponse(applicationRepository.save(newApplication));
+    private String nvl(String value, String fallback) {
+        return (value != null && !value.isBlank()) ? value : fallback;
+    }
+
+    public ApplicationDtos.ApplicationResponse applicationStatusChange(Long id, ApplicationStatus status) {
+        return updateStatus(id, status);
+    }
+
+    public ApplicationDtos.ApplicationResponse withdrawApplication(Long applicationId) {
+        return mapToResponse(withdraw(applicationId));
+    }
+
+    public Page<ApplicationDtos.ApplicationResponse> findAllEmployerApplications(
+            ApplicationStatus status, Pageable pageable) {
+        return findAllForEmployer(status, pageable);
     }
 
     @Transactional
-    public ApplicationDtos.ApplicationResponse applicationStatusChange(Long applicationId, ApplicationStatus status) {
-
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        EmployerProfile currentEmployer = employerProfileRepository.findByUser_Email(email)
-                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Employer not found"));
-
+    public Application withdraw(Long applicationId) {
+        String email = currentEmail();
         Application application = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Application not found"));
-
-        if (!application.getJob().getEmployer().getId().equals(currentEmployer.getId())) {
-            throw new AppExceptions.BadRequestException("This job offer does not belong to you");
-        }
-
-        ApplicationStatus currentStatus = application.getStatus();
-
-        if (currentStatus == ApplicationStatus.ACCEPTED) {
-            if (status == ApplicationStatus.PENDING ||
-                    status == ApplicationStatus.REVIEWED ||
-                    status == ApplicationStatus.REJECTED) {
-                throw new AppExceptions.BadRequestException(
-                        "Cannot change status from ACCEPTED to " + status + ". Only COMPLETED is allowed."
-                );
-            }
-        }
-
-        if (currentStatus == ApplicationStatus.WITHDRAWN) {
-            throw new AppExceptions.BadRequestException("Cannot change status of a withdrawn application.");
-        }
-
-        if (currentStatus == ApplicationStatus.REJECTED) {
-            throw new AppExceptions.BadRequestException("Cannot change status of a rejected application.");
-        }
-
-        if(currentStatus == ApplicationStatus.COMPLETED) {
-            throw new AppExceptions.BadRequestException("Cannot change status of a completed application.");
-        }
-
-        application.setStatus(status);
-
-        emailService.sendApplicationStatusEmail(
-                application.getStudent().getUser().getEmail(), status, application.getJob());
-        return mapToResponse(applicationRepository.save(application));
-    }
-
-    @Transactional
-    public ApplicationDtos.ApplicationResponse withdrawApplication(Long applicationId) {
-
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-
         StudentProfile student = studentProfileRepository.findByUser_Email(email)
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Student profile not found"));
-
-        Application application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Application not found"));
-
         if (!application.getStudent().getId().equals(student.getId())) {
-            throw new AppExceptions.BadRequestException("This application does not belong to you");
+            throw new AppExceptions.UnauthorizedException("You do not own this application");
         }
-
-        if (application.getStatus() == ApplicationStatus.WITHDRAWN) {
-            throw new AppExceptions.BadRequestException("Application is already withdrawn");
-        }
-
-        if (application.getStatus() == ApplicationStatus.COMPLETED) {
-            throw new AppExceptions.BadRequestException(
-                    "Cannot withdraw an application that is already " + application.getStatus()
-            );
-        }
-
         application.setStatus(ApplicationStatus.WITHDRAWN);
-        return mapToResponse(applicationRepository.save(application));
+        return applicationRepository.save(application);
     }
 
+
     @Transactional(readOnly = true)
-    public Page<ApplicationDtos.ApplicationResponse> findAllEmployerApplications(ApplicationStatus status, Pageable pageable) {
-
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-
+    public Page<ApplicationDtos.ApplicationResponse> findAllForEmployer(
+            ApplicationStatus status, Pageable pageable) {
+        String email = currentEmail();
         EmployerProfile employer = employerProfileRepository.findByUser_Email(email)
-                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Employer not found"));
+                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Employer profile not found"));
 
         if (status != null) {
-            return applicationRepository.findAllByJob_Employer_IdAndStatus(employer.getId(), status, pageable)
+            return applicationRepository
+                    .findAllByJob_Employer_IdAndStatus(employer.getId(), status, pageable)
                     .map(this::mapToResponse);
         }
-
-        return applicationRepository.findAllByJob_Employer_Id(employer.getId(), pageable)
+        return applicationRepository
+                .findAllByJob_Employer_Id(employer.getId(), pageable)
                 .map(this::mapToResponse);
     }
 
-    private Job findJobById(Long jobId){
-        return jobRepository.findById(jobId).orElseThrow(() -> new AppExceptions.ResourceNotFoundException("The job was not found"));
+
+    @Transactional
+    public ApplicationDtos.ApplicationResponse updateStatus(Long applicationId, ApplicationStatus status) {
+        String email = currentEmail();
+        EmployerProfile employer = employerProfileRepository.findByUser_Email(email)
+                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Employer profile not found"));
+        Application application = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Application not found"));
+        if (!application.getJob().getEmployer().getId().equals(employer.getId())) {
+            throw new AppExceptions.UnauthorizedException("You do not own this application");
+        }
+        application.setStatus(status);
+        return mapToResponse(applicationRepository.save(application));
     }
 
-    private ApplicationDtos.ApplicationResponse mapToResponse(Application application) {
-        ApplicationDtos.JobSummary jobSummary = new ApplicationDtos.JobSummary(
-                application.getJob().getId(),
-                application.getStudent().getId(),
-                application.getJob().getTitle(),
-                application.getJob().getEmployer().getCompanyName(),
-                application.getJob().getDescription()
-        );
 
+    private ApplicationDtos.ApplicationResponse mapToResponse(Application application) {
         return new ApplicationDtos.ApplicationResponse(
                 application.getId(),
+                application.getStudent().getId(),
                 application.getFirstName(),
                 application.getLastName(),
                 application.getEmail(),
@@ -195,7 +171,14 @@ public class ApplicationService {
                 application.getMessageToCompany(),
                 application.getStatus(),
                 application.getAppliedAt(),
-                jobSummary
+                new ApplicationDtos.JobSummary(
+                        application.getJob().getId(),
+                        application.getStudent().getId(),
+                        application.getJob().getTitle(),
+                        application.getJob().getEmployer() != null
+                                ? application.getJob().getEmployer().getCompanyName() : "",
+                        application.getJob().getDescription()
+                )
         );
     }
 }

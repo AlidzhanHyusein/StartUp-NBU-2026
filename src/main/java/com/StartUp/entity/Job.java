@@ -41,6 +41,9 @@ public class Job {
     @Column(name = "category")
     private JobCategory category;
 
+    @Column(name = "group_size")
+    private Integer groupSize;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "type")
     private JobType type;

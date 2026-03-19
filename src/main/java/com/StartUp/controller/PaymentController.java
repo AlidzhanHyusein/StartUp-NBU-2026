@@ -1,6 +1,9 @@
 package com.StartUp.controller;
 
+import com.StartUp.dtos.PaymentRequest;
 import com.StartUp.entity.Payment;
+import com.StartUp.entity.User;
+import com.StartUp.repository.UserRepository;
 import com.StartUp.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -12,11 +15,19 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final UserRepository userRepository;
 
+    @PostMapping
+    public ResponseEntity<Payment> createPayment(@RequestBody PaymentRequest request) {
+        User payer = userRepository.findById(request.getPayerId()).orElseThrow();
+        User receiver = userRepository.findById(request.getReceiverId()).orElseThrow();
+        return ResponseEntity.ok(paymentService.createPayment(
+                request.getJobApplicationId(), payer, receiver, request.getAmount()
+        ));
+    }
     @PostMapping("/calculate")
     public ResponseEntity<Map<String, BigDecimal>> calculatePayment(@RequestBody Map<String, BigDecimal> request) {
         BigDecimal amount = request.get("amount");

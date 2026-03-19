@@ -2,7 +2,9 @@ package com.StartUp.service;
 
 import com.StartUp.entity.Notification;
 import com.StartUp.entity.User;
+import com.StartUp.exception.AppExceptions;
 import com.StartUp.repository.NotificationRepository;
+import com.StartUp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final UserRepository userRepository;
 
     @Transactional
     public Notification createNotification(User user, Notification.NotificationType type, 
@@ -33,7 +36,6 @@ public class NotificationService {
 
         Notification savedNotification = notificationRepository.save(notification);
 
-        // Изпращане в реално време чрез WebSocket
         messagingTemplate.convertAndSendToUser(
                 user.getId().toString(),
                 "/queue/notifications",
@@ -41,6 +43,35 @@ public class NotificationService {
         );
 
         return savedNotification;
+    }
+
+    @Transactional
+    public void sendNotification(User recipient, String title, String message,
+                                 String typeString, Long referenceId) {
+        Notification.NotificationType type;
+        try {
+            type = Notification.NotificationType.valueOf(typeString);
+        } catch (IllegalArgumentException e) {
+            type = Notification.NotificationType.SYSTEM;
+        }
+
+        Notification notification = Notification.builder()
+                .user(recipient)
+                .type(type)
+                .title(title)
+                .message(message)
+                .isRead(false)
+                .relatedEntityId(referenceId)
+                .relatedEntityType("GROUP_BOOKING")
+                .build();
+
+        notificationRepository.save(notification);
+    }
+    @Transactional
+    public void markAllReadByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("User not found"));
+        notificationRepository.markAllReadByUserId(user.getId());
     }
 
     public List<Notification> getUserNotifications(Long userId) {

@@ -48,7 +48,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/verify", "/api/auth/refresh", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/api/ai/**").permitAll()
+                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/verify", "/api/auth/refresh", "/swagger-ui.html","/api/payments/stripe/webhook","/api/payments/connect/**", "/swagger-ui/**", "/v3/api-docs/**", "/api/ai/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
@@ -80,7 +80,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(clientOne, clientTwo));
+        config.setAllowedOrigins(List.of(clientOne, clientTwo,"http://localhost:5173",
+                "http://localhost:5174"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

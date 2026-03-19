@@ -1,6 +1,9 @@
 package com.StartUp.controller;
 
+import com.StartUp.dtos.ReviewRequest;
 import com.StartUp.entity.Review;
+import com.StartUp.entity.User;
+import com.StartUp.repository.UserRepository;
 import com.StartUp.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -12,15 +15,25 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/reviews")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class ReviewController {
 
     private final ReviewService reviewService;
+    private final UserRepository userRepository;
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Review>> getReviewsForUser(@PathVariable Long userId) {
         List<Review> reviews = reviewService.getReviewsForUser(userId);
         return ResponseEntity.ok(reviews);
+    }
+
+    @PostMapping
+    public ResponseEntity<Review> createReview(@RequestBody ReviewRequest request) {
+        User reviewer = userRepository.findById(request.getReviewerId()).orElseThrow();
+        User reviewedUser = userRepository.findById(request.getReviewedUserId()).orElseThrow();
+        return ResponseEntity.ok(reviewService.createReview(
+                request.getJobApplicationId(), reviewer, reviewedUser,
+                request.getRating(), request.getComment()
+        ));
     }
 
     @GetMapping("/reviewer/{reviewerId}")

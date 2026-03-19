@@ -2,6 +2,7 @@ package com.StartUp.service;
 
 import com.StartUp.entity.*;
 import com.StartUp.repository.PaymentRepository;
+import com.StartUp.repository.ReferralRepository;
 import com.StartUp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -10,6 +11,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -18,8 +20,9 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
-    
-    private static final BigDecimal COMMISSION_RATE = new BigDecimal("0.10"); // 10% комисионна
+    private final ReferralRepository referralRepository;
+
+    private static final BigDecimal COMMISSION_RATE = new BigDecimal("0.10");
 
     public BigDecimal calculateCommission(BigDecimal amount) {
         return amount.multiply(COMMISSION_RATE).setScale(2, RoundingMode.HALF_UP);
@@ -47,7 +50,6 @@ public class PaymentService {
 
         Payment savedPayment = paymentRepository.save(payment);
         
-        // Изпращане на нотификация
         notificationService.createNotification(
                 payer,
                 Notification.NotificationType.PAYMENT_SENT,
@@ -71,7 +73,6 @@ public class PaymentService {
 
         Payment savedPayment = paymentRepository.save(payment);
 
-        // Нотификация за получателя
         notificationService.createNotification(
                 payment.getReceiver(),
                 Notification.NotificationType.PAYMENT_RECEIVED,
@@ -82,6 +83,18 @@ public class PaymentService {
         );
 
         return savedPayment;
+    }
+
+    public boolean isReferredUserFirstJob(User receiver) {
+        Optional<Referral> referral = referralRepository.findByReferredId(receiver.getId());
+        if (referral.isEmpty()) return false;
+
+        List<Payment> previousPayments = paymentRepository.findByReceiverId(receiver.getId())
+                .stream()
+                .filter(p -> p.getStatus() == Payment.PaymentStatus.COMPLETED)
+                .toList();
+
+        return previousPayments.isEmpty();
     }
 
     public List<Payment> getPaymentHistory(Long userId) {
