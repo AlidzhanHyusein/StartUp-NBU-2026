@@ -8,10 +8,11 @@ import java.time.LocalDateTime;
 
 @Builder
 @Data
-
 public class ApplicationDtos {
+
     public record ApplicationResponse(
             Long id,
+            Long studentProfileId,
             String firstName,
             String lastName,
             String email,
@@ -22,8 +23,7 @@ public class ApplicationDtos {
             ApplicationStatus status,
             LocalDateTime appliedAt,
             JobSummary job
-    ) {
-    }
+    ) {}
 
     public record ApplicationRequest(
             String firstName,
@@ -34,8 +34,7 @@ public class ApplicationDtos {
             String resumeUrl,
             String messageToCompany,
             ApplicationStatus status
-    ) {
-    }
+    ) {}
 
     public record JobSummary(
             Long id,

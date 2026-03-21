@@ -39,4 +39,11 @@ public class AppExceptions {
             super(message);
         }
     }
+
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public static class UnauthorizedException extends RuntimeException{
+        public UnauthorizedException(String message){
+            super(message);
+        }
+    }
 }

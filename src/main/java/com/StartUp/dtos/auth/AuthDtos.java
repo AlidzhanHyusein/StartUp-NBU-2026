@@ -44,6 +44,9 @@ public class AuthDtos {
             @NotNull(message = "Date of birth is required")
             LocalDate dateOfBirth,
 
+             String referralCode,
+
+
             String university,
             String major,
             String bio,

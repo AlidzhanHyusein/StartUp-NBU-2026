@@ -13,8 +13,10 @@ import java.time.LocalDate;
 public class JobDtos {
     public record JobResponse (
             Long id,
+            Long userId,
             EmployerSummary employer,
             String title,
+            Integer groupSize,
             JobCategory category,
             JobType type,
             Integer duration,
@@ -36,9 +38,9 @@ public class JobDtos {
             JobLocation location,
             String description,
             LocalDate startDate,
-            LocalDate endDate
-    ){
-    }
+            LocalDate endDate,
+            Integer groupSize
+    ){}
 
     public record EmployerSummary (
             String firstName,

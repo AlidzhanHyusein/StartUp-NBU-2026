@@ -39,6 +39,9 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private StudentProfile studentProfile;
+
     @Column(nullable = false)
     private String phoneNumber;
 
@@ -64,6 +67,12 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "stripe_account_id")
+    private String stripeAccountId;
+
+    @Column(name = "stripe_onboarding_complete")
+    @Builder.Default
+    private Boolean stripeOnboardingComplete = false;
 
     private String verificationToken;
 
@@ -80,7 +89,6 @@ public class User {
 
 
     public void setRating(int rating) {
-        // Rating is calculated from reviews, this is a placeholder
-        // Actual rating is stored in review aggregations
+
     }
 }

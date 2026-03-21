@@ -42,7 +42,7 @@ public class Application {
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
-    @Column(name = "city", nullable = false)
+    @Column(name = "city")
     private String city;
 
     @Column(name = "status")

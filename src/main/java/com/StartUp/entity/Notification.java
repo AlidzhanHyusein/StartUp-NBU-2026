@@ -1,5 +1,6 @@
 package com.StartUp.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +22,7 @@ public class Notification {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnoreProperties({"password", "refreshToken", "verificationToken", "studentProfile", "employerProfile"})
     private User user;
 
     @Enumerated(EnumType.STRING)
@@ -62,6 +64,13 @@ public class Notification {
         NEW_MESSAGE,
         NEW_REVIEW,
         JOB_UPDATED,
-        SYSTEM
+        SYSTEM,
+
+        GROUP_INVITE,
+        GROUP_INVITE_ACCEPTED,
+        GROUP_INVITE_DECLINED,
+        GROUP_COMPLETE,
+        GROUP_CANCELLED,
+        GROUP_EMPLOYER_DECISION
     }
 }
